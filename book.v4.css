@@ -1,0 +1,343 @@
+/*! book.v4.css — 月みちて、山となる。 PC版 スタイル本体
+ *  2026-09-06 / 10見開き構成（00ローディング〜09お問い合わせ）
+ *  v3 からの変更点は末尾の「■ v4 変更点まとめ」を参照
+ *
+ *  埋め込み側（STUDIO body末尾）に残しているもの:
+ *    - CSS変数（--navW / --logoW / --titleX などの調整ノブ）
+ *    - box-sizing リセットと骨格（.bc .bk .cl .cr .pp .pf）
+ *    - 起動前に他ページを隠す .m.pre（外部CSSが届く前に効かせるため）
+ *
+ *  ■ 座標のきまり ------------------------------------------------
+ *  .pgIn / .fLin 内の要素 … 「そのページの本文領域（左ナビを除いた幅）」に対する %
+ *  .xs（見開きをまたぐ画像）… 「見開き全体」に対する %
+ *                    0=左端 / 50=ノド（背） / 100=右端
+ *  数値はすべて 1400×868 の設計データを画素実測して算出しています。
+ *  ---------------------------------------------------------------
+ *  更新するときはファイル名の版を上げること: book.v4.css -> book.v5.css
+ */
+
+/* ============================================================
+   0. 縦書き・書体の共通指定
+   ============================================================ */
+.vt,.ni,.itx,.hh,.hb,.at,.tl,.tt,.ts,.tg,.igt,.kw,.lead,.bd,
+.ibk,.ibn,.ibm,.ibd,.ibl,.fh,.fcap{writing-mode:vertical-rl;text-orientation:mixed}
+.ni,.tt,.kw,.igt,.igb b{font-family:"ab-yoshienoryokan-b","Shippori Mincho","Noto Serif JP",serif!important;font-weight:400!important;font-style:normal!important}
+
+/* ============================================================
+   1. 左ナビ / scroll / 右下ボタン
+   ------------------------------------------------------------
+   ★v4: 背景を白に。文字を大きく・濃く。区切り線は設計どおり淡いグレー。
+   ============================================================ */
+.nv{position:absolute;left:0;top:0;bottom:0;width:var(--navW);z-index:500;display:flex;flex-direction:column;justify-content:center;
+    padding:4vh 0 18vh;background:#fff;border-right:1px solid #dadad8}
+.nv{transform:translateX(-100%);opacity:0;visibility:hidden;pointer-events:none;transition:transform .7s cubic-bezier(.76,0,.24,1),opacity .45s ease,visibility .45s ease}
+.m.hn .nv{transform:translateX(0);opacity:1;visibility:visible;pointer-events:auto}
+.ni{position:relative;width:100%;flex:1 1 0;min-height:0;padding:8px 26% 8px 0;
+    font-size:var(--navFS);letter-spacing:.16em;line-height:1.15;color:var(--navC);cursor:pointer;
+    display:flex;align-items:center;justify-content:center;user-select:none;white-space:nowrap;
+    transition:color .35s,opacity .35s}
+.ni:hover{color:#111}
+.ni span{position:relative;display:block}
+.ni span:after{content:"";position:absolute;top:-2px;bottom:-2px;left:calc(100% + .45em);width:3px;background:url("https://storage.googleapis.com/studio-design-asset-files/projects/xPORNDYyOr/s-4x150_6cdb6424-1248-42d3-b724-ac77045420f8.svg") center/100% 100% no-repeat;opacity:0;transition:opacity .6s ease;pointer-events:none}
+.ni.on{color:#111}
+.ni.on span:after{opacity:1}
+
+/* scroll インジケーター（ローディングから最後の1つ手前まで出る） */
+.si{position:absolute;bottom:clamp(22px,3.4vh,34px);left:clamp(38px,4vw,62px);z-index:520;display:flex;align-items:center;gap:10px;font-size:clamp(10px,.85vw,12px);letter-spacing:.15em;color:var(--il);cursor:pointer;user-select:none;opacity:0;transition:opacity .6s ease,left .7s cubic-bezier(.76,0,.24,1)}
+.m .si{opacity:.75}
+.m.hn .si{left:calc(var(--navW) + clamp(28px,2.4vw,42px))}
+.m.last .si{opacity:0;pointer-events:none}
+.si:hover{opacity:1}
+.sl{width:40px;height:1px;background:var(--if);position:relative;overflow:hidden}
+.sl:after{content:"";position:absolute;top:0;left:0;width:30%;height:100%;background:var(--i);animation:sp 2.2s ease-in-out infinite}
+@keyframes sp{0%{left:-30%;opacity:0}50%{opacity:1}100%{left:100%;opacity:0}}
+
+/* 右下の丸ボタン（テーマ見開きのみ） */
+.cn{position:absolute;right:clamp(30px,3vw,58px);bottom:clamp(26px,4vh,48px);z-index:520;display:flex;align-items:center;gap:clamp(14px,1.5vw,22px);transform:translateX(46px);opacity:0;visibility:hidden;pointer-events:none;transition:transform .7s cubic-bezier(.76,0,.24,1),opacity .5s ease,visibility .5s ease}
+.m.hcn .cn{transform:translateX(0);opacity:1;visibility:visible;pointer-events:auto}
+.cb{position:relative;display:flex;width:clamp(42px,3.2vw,54px);height:clamp(42px,3.2vw,54px);border-radius:50%;text-decoration:none;border:0;padding:0;background:0;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:transform .55s var(--E),filter .55s ease}
+.cb img{width:100%;height:100%;display:block;object-fit:contain;pointer-events:none;transition:transform .55s var(--E)}
+.cb:before{content:"";position:absolute;inset:-1px;border-radius:50%;border:1px solid rgba(42,34,26,.4);opacity:0;transform:scale(.82);transition:opacity .55s ease,transform .65s var(--E);pointer-events:none}
+.cb:hover{transform:translateY(-6px);filter:drop-shadow(0 9px 15px rgba(42,34,26,.22))}
+.cb:hover img{transform:scale(1.04)}
+.cb:hover:before{opacity:1;transform:scale(1.16)}
+.cb:active{transform:translateY(-2px)}
+
+/* ============================================================
+   2. 本のめくり・ノド
+   ============================================================ */
+.spn{position:absolute;left:50%;top:0;bottom:0;width:10px;transform:translateX(-50%);z-index:150;pointer-events:none;background:linear-gradient(90deg,transparent,rgba(42,34,26,.05) 50%,transparent);transition:opacity .6s ease}
+.m.ld .spn{opacity:0}
+.m.ld #p0>.pf:not(.b):before{opacity:0}
+.pf:before{content:"";position:absolute;top:0;bottom:0;right:0;width:14px;background:linear-gradient(270deg,rgba(42,34,26,.04),transparent);z-index:30;pointer-events:none;transition:opacity .6s ease}
+.pf.b:before{right:auto;left:0;background:linear-gradient(90deg,rgba(42,34,26,.04),transparent)}
+.fs{position:absolute;inset:0;pointer-events:none;background:linear-gradient(250deg,transparent,transparent 35%,rgba(0,0,0,.18) 65%,rgba(0,0,0,.35));opacity:0;z-index:40}
+
+/* ★v4-①: JSが動く前でも紙の重なり順を正しくしておく（他ページのチラ見え防止） */
+#p0{z-index:90}#p1{z-index:80}#p2{z-index:70}#p3{z-index:60}#p4{z-index:50}
+#p5{z-index:40}#p6{z-index:30}#p7{z-index:20}#p8{z-index:10}
+
+/* ============================================================
+   3. ページの土台
+   ============================================================ */
+.pgL,.pgR{position:absolute;inset:0;overflow:hidden}
+.pgL{padding-left:var(--navW)}
+.pgIn{position:relative;width:100%;height:100%}
+
+/* 見開きをまたぐ画像。--x1/--x2/--y1/--y2 は「見開き全体」に対する数値（%記号なし） */
+.xs{position:absolute;inset:0;overflow:hidden;z-index:1;pointer-events:none}
+.xs>i{position:absolute;display:block;overflow:hidden;
+  left:calc(var(--x1) * 2%);width:calc((var(--x2) - var(--x1)) * 2%);
+  top:calc(var(--y1) * 1%);height:calc((var(--y2) - var(--y1)) * 1%)}
+.xs.r>i{left:calc((var(--x1) - 50) * 2%)}
+.xs img{width:100%;height:100%;object-fit:cover;display:block;background:#ded9cf}
+
+/* 片ページに収まる画像。--l/--t/--w/--h は「そのページの本文領域」に対する数値 */
+.ph{position:absolute;left:calc(var(--l) * 1%);top:calc(var(--t) * 1%);width:calc(var(--w) * 1%);height:calc(var(--h) * 1%);overflow:hidden;z-index:1}
+.ph img{width:100%;height:100%;object-fit:cover;display:block;background:#ded9cf}
+/* 差し替え待ちのプレースホルダー */
+.ph.tmp img,.xs.tmp img{filter:grayscale(1) contrast(.35) brightness(1.28)}
+.ph.tmp:after,.xs.tmp:after{content:attr(data-lbl);position:absolute;left:0;right:0;top:50%;transform:translateY(-50%);text-align:center;font-size:clamp(10px,.85vw,13px);letter-spacing:.2em;color:#fff;pointer-events:none}
+
+/* ============================================================
+   4. ページ00 ローディング（見開きロゴ）
+   ------------------------------------------------------------
+   ★v4: タイトルロゴを設計実測サイズ（約1.9倍）へ拡大し、
+         中央のロゴイラストに寄せて配置。コピー文も内側へ寄せ、
+         文字サイズと行間を設計の実測値に合わせた。
+   ============================================================ */
+.ir.cd .itl,.ir.cd .ilh{display:none}
+.itl{position:absolute;left:var(--titleX);bottom:var(--titleY);width:var(--titleW);z-index:6}
+.itx{position:absolute;right:var(--introX);top:var(--introY);font-size:var(--introFS);letter-spacing:.27em;line-height:1.75;color:var(--i);z-index:6}
+.itx span{display:block}
+.itx span+span{margin-block-start:.65em}
+.itl,.itx span,.ilh img{opacity:0}
+.ilh{position:absolute;top:var(--logoY);width:calc(var(--logoW) / 2);height:calc(var(--logoW) / var(--logoAR));z-index:5;overflow:hidden;pointer-events:none;transform:translateY(-50%)}
+.ilh.l{right:0}
+.ilh.r{left:0}
+.ilh img{position:absolute;top:0;width:200%;height:100%;object-fit:contain;max-width:none;will-change:opacity,transform,filter}
+.ilh.l img{left:0}
+.ilh.r img{right:0}
+
+/* ============================================================
+   5. ページ01 右＝イントロ ／ 左＝目次
+   ============================================================ */
+/* --- 右ページ：ものがたりのはじまりへようこそ。 --- */
+.hr{position:absolute;inset:0;overflow:hidden}
+.hh{position:absolute;right:25%;top:29.5%;font-size:clamp(18px,min(1.93vw,3.9vh),32px);font-weight:400;letter-spacing:.16em;line-height:1.9;color:var(--i);white-space:nowrap}
+.hh span{display:block}
+.hb{position:absolute;right:39.5%;top:29%;height:46%;font-size:clamp(11px,min(1.11vw,1.85vh),17px);line-height:2.55;letter-spacing:.04em;color:var(--im)}
+.ab{position:absolute;top:50.5%;right:66%;display:flex;align-items:center;justify-content:center;height:25%;aspect-ratio:153/641;background:url("https://storage.googleapis.com/studio-design-asset-files/projects/xPORNDYyOr/s-153x641_v-fs_webp_173130ce-3ea7-4951-b49c-bc49c0d568b2.png") center/contain no-repeat;text-decoration:none;z-index:5;transition:transform .55s var(--E),filter .55s ease}
+.af{position:absolute;left:15%;right:15%;top:17%;bottom:7%;background:linear-gradient(180deg,rgba(42,34,26,.08),rgba(42,34,26,.02) 58%,transparent);opacity:0;transition:opacity .55s ease;pointer-events:none}
+.at{position:relative;z-index:1;font-size:clamp(10px,.85vw,14px);letter-spacing:.22em;line-height:1.8;color:var(--i);padding-top:6%;transition:color .45s ease,transform .55s var(--E)}
+.ab:hover{transform:translateY(7px);filter:drop-shadow(0 7px 11px rgba(42,34,26,.13))}
+.ab:hover .af{opacity:1}
+.ab:hover .at{color:#000;transform:translateY(4px)}
+
+/* --- 左ページ：目次 ---
+   設計実測：区切り線 y220..690 / 桁ピッチ83.7px / 見出し y235 / 説明 y361 / 矢印 y660 */
+.tc{position:absolute;inset:0;overflow:hidden}
+.tl{position:absolute;right:15.9%;top:15.1%;font-size:clamp(11px,.93vw,15px);letter-spacing:.30em;color:var(--im)}
+.tls{position:absolute;left:0;right:2.9%;top:25.3%;height:54.2%;display:flex;flex-direction:row-reverse;align-items:stretch;justify-content:center}
+.ti{position:relative;display:flex;flex-direction:column;align-items:center;width:11.95%;padding:0 0 4.7%;cursor:pointer;text-decoration:none;color:inherit;-webkit-tap-highlight-color:transparent}
+.ti:before{content:"";position:absolute;right:0;top:0;bottom:0;width:1px;background:rgba(58,50,40,.3);transform-origin:top center;transition:background .45s ease,transform .55s var(--E)}
+.ti:last-child{border-left:1px solid rgba(58,50,40,.3)}
+.ti:after{content:"";position:absolute;inset:0 8%;background:linear-gradient(180deg,rgba(42,34,26,.05),transparent 55%);opacity:0;transition:opacity .5s ease;pointer-events:none}
+.tt{font-size:clamp(19px,min(1.93vw,4.1vh),33px);letter-spacing:.10em;line-height:1.15;color:var(--i);height:29.5%;padding-top:3%;white-space:nowrap;transition:color .45s ease,transform .55s var(--E)}
+.tx{display:flex;flex-direction:row-reverse;align-items:flex-start;justify-content:center;gap:clamp(8px,.9vw,14px);flex:1 1 auto;min-height:0;margin-top:.5%}
+.ts,.tg{white-space:nowrap;line-height:1.6;transition:color .45s ease,transform .55s var(--E)}
+.ts{font-size:clamp(10px,min(.86vw,1.8vh),13.5px);letter-spacing:.12em;color:var(--im)}
+.tg{font-size:clamp(9px,min(.79vw,1.65vh),12.5px);letter-spacing:.10em;color:var(--il)}
+.ta{display:block;margin-top:auto;padding-top:4%;transition:transform .55s var(--E)}
+.ta i{display:block;width:9px;height:9px;border-right:1.3px solid var(--il);border-bottom:1.3px solid var(--il);transform:rotate(45deg);transition:border-color .45s ease}
+.ti:hover .tt{color:#000;transform:translateY(-7px)}
+.ti:hover .ts,.ti:hover .tg{color:var(--i);transform:translateY(-3px)}
+.ti:hover:before{background:rgba(42,34,26,.72)}
+.ti:hover:after{opacity:1}
+.ti:hover .ta{animation:bob 1.2s ease-in-out infinite}
+.ti:hover .ta i{border-color:#2a221a}
+@keyframes bob{0%,100%{transform:translateY(3px)}50%{transform:translateY(9px)}}
+.ti:active .tt{transform:translateY(-3px) scale(.97)}
+
+/* ============================================================
+   6. ページ02 日々のあれこれ（Instagram）
+   ------------------------------------------------------------
+   ★v4: 見出しを拡大。カードを縦長にし、写真を横長（6:5）にして
+         キャプションの表示行数を 3→4（右ページは5）に増やした。
+   ============================================================ */
+.igl,.igr{position:absolute;inset:0;overflow:hidden}
+.igb{position:absolute;left:7.3%;top:5.2%;display:flex;align-items:center;gap:11px;color:#1d1710;z-index:5;text-decoration:none}
+.igb svg{width:clamp(18px,1.5vw,24px);height:clamp(18px,1.5vw,24px);display:block}
+.igb b{font-weight:400;font-size:clamp(14px,1.35vw,21px);letter-spacing:.08em}
+.igt{position:absolute;right:11.7%;top:15.9%;font-size:var(--igtFS);letter-spacing:.22em;line-height:1.65;color:var(--i);z-index:5}
+.igt span{display:block}
+
+/* 左ページ：6枚グリッド */
+.igg{position:absolute;left:5.4%;top:17%;width:88%;height:71%;display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(2,1fr);gap:6% 4.7%;direction:rtl}
+/* 右ページ：最新1件を大きく */
+.igf{position:absolute;left:24.9%;top:26.5%;width:47.9%;height:52%}
+.igf .igc{width:100%;height:100%;display:flex;flex-direction:column}
+.igf .igc img{flex:1 1 auto;min-height:0;aspect-ratio:auto}
+.igf .igd{font-size:clamp(9px,.8vw,12px)}
+.igf .igp{font-size:clamp(10px,.9vw,13.5px);-webkit-line-clamp:5}
+
+.igc{direction:ltr;text-align:left;display:block;background:#fff;padding:clamp(7px,.65vw,11px) clamp(7px,.65vw,11px) clamp(11px,1vw,15px);box-shadow:0 5px 16px rgba(42,34,26,.13);text-decoration:none;color:inherit;overflow:hidden;transition:transform .5s var(--E),box-shadow .5s ease}
+.igc:hover{transform:translateY(-5px);box-shadow:0 12px 24px rgba(42,34,26,.18)}
+.igc img{width:100%;aspect-ratio:6/5;object-fit:cover;display:block;background:#ece7dc}
+.igd{font-size:clamp(8px,.7vw,11px);letter-spacing:.14em;color:var(--il);margin:clamp(6px,.8vh,11px) 2px clamp(3px,.4vh,6px)}
+.igp{font-size:clamp(9px,.78vw,12px);line-height:1.85;letter-spacing:.03em;color:var(--im);margin:0 2px;display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden}
+
+/* ============================================================
+   7. ページ03〜08 テーマ見開き（共通パーツ）
+   ------------------------------------------------------------
+   設計実測：本文の桁ピッチ32px（＝15px×2.13）／見出し桁ピッチ39px
+             リード桁幅24px／情報ブロックの桁ピッチ26px（＝13px×2.0）
+   ============================================================ */
+/* --- 右ページ：見出し／リード／本文 --- */
+.kw{position:absolute;right:7.3%;top:17.3%;font-size:clamp(22px,min(2.39vw,4.65vh),40px);letter-spacing:.16em;line-height:1.16;color:var(--i);white-space:nowrap;z-index:5}
+.lead{position:absolute;right:13.9%;top:22.6%;font-size:clamp(15px,min(1.68vw,3.1vh),28px);letter-spacing:.11em;line-height:1.9;color:var(--i);white-space:nowrap;z-index:5}
+.bd{position:absolute;right:28.9%;font-size:var(--bdFS);line-height:2.13;letter-spacing:.04em;color:var(--im);z-index:5}
+.bd.t{top:7.6%;height:25%}
+.bd.b{top:68.2%;height:25%}
+
+/* --- 左ページ：情報ブロックの並び ---
+   .ibs = ブロックの置き場（右づめ・右から左へ並ぶ）
+   .ib  = 1ブロック。右から  見出し群(.ibc) → 説明(.ibd) → リンク(.ibl) の順 */
+.ibs{position:absolute;display:flex;flex-direction:row-reverse;align-items:flex-start;justify-content:flex-start;gap:clamp(14px,1.7vw,32px);z-index:5}
+.ib{display:flex;flex-direction:row-reverse;align-items:flex-start;gap:.55em;height:100%;max-width:100%}
+.ibc{display:flex;flex-direction:row-reverse;align-items:flex-start;gap:.4em;height:100%}
+.ibk{font-size:clamp(9px,.78vw,12.5px);letter-spacing:.12em;line-height:1.7;color:var(--il);white-space:nowrap}
+.ibn{font-size:clamp(13px,min(1.25vw,2.5vh),20px);letter-spacing:.12em;line-height:1.6;color:var(--i);white-space:nowrap;margin-top:.35em}
+.ibn small{font-size:.62em;letter-spacing:.06em}
+.ibm{font-size:clamp(9px,.78vw,12.5px);letter-spacing:.06em;line-height:1.8;color:var(--il);white-space:nowrap;margin-top:2.2em}
+.ibm+.ibm{margin-top:1.1em}
+.ibd{font-size:var(--ibdFS);line-height:2;letter-spacing:.04em;color:var(--im);height:100%}
+.ibl{position:relative;font-size:clamp(10px,.82vw,13px);letter-spacing:.08em;line-height:1.7;color:var(--im);text-decoration:none;align-self:flex-end;padding-top:26px;white-space:nowrap;cursor:pointer;transition:opacity .35s}
+.ibl:before{content:"";position:absolute;top:0;left:50%;transform:translateX(-50%);width:1px;height:20px;background:rgba(58,50,40,.55)}
+.ibl:hover{opacity:.6}
+.ibls{display:flex;flex-direction:row-reverse;align-items:flex-end;gap:clamp(10px,1.2vw,22px);align-self:flex-end;height:auto}
+
+/* ============================================================
+   8. 各テーマ見開きの個別レイアウト（すべて設計データの実測値）
+   ============================================================ */
+/* --- 03 とまる（左） --- */
+.k1L .ibs{left:9.4%;right:22%;top:68.2%;height:25.5%}
+/* --- 04 たべる（左） --- */
+.k2L .ibs{left:5.3%;right:6.8%;top:68.2%;height:25.5%}
+/* --- 05 しる（左） --- */
+.k3L .ibs.a{left:14.4%;right:45.7%;top:29.9%;height:17.9%}   /* 体験プログラム */
+.k3L .ibs.b{left:9.8%;right:45.5%;top:69.2%;height:21.9%}    /* ワークショップ */
+.k3L .ibs.c{left:73.7%;right:2.6%;top:68.3%;height:24.8%}    /* ツアーガイド */
+/* --- 06 ためす（左） --- */
+.k4L .ibs.a{left:11.6%;right:26.7%;top:30.8%;height:17.9%}
+.k4L .ibs.b{left:16.1%;right:27.2%;top:72%;height:21.4%}
+/* --- 07 つくる（左） --- */
+.k5L .ibs{left:5.3%;right:7.1%;top:68.2%;height:25.5%}
+/* --- 08 すまう（左） --- */
+.k6L .ibs.a{left:12.8%;right:31%;top:9%;height:23.9%}
+.k6L .ibs.b{left:12.8%;right:30.6%;top:39.4%;height:23.7%}
+
+/* ============================================================
+   9. ページ09 お問い合わせ
+   ------------------------------------------------------------
+   ★v4: フォームの右端を 9.3%→18.6% にして「お問い合わせ」の
+         縦書きタイトルとの重なりを解消。内容欄が余白を吸収して
+         見開き右ページいっぱいに伸びるようにした。
+         左ページは .fLin で本文領域を作り、左ナビに文字が潜る不具合を解消。
+   ============================================================ */
+/* --- 右ページ：フォーム --- */
+.fR{position:absolute;inset:0;overflow:hidden}
+.fh{position:absolute;right:9.7%;top:7.8%;font-size:clamp(15px,min(1.43vw,2.9vh),24px);letter-spacing:.27em;line-height:1.5;color:var(--i);z-index:6}
+.fm{position:absolute;left:18.5%;right:18.6%;top:9.5%;bottom:5.5%;display:flex;flex-direction:column;overscroll-behavior:contain}
+.fw{flex:1 1 auto;min-height:0;display:grid;grid-template-columns:auto minmax(0,1fr);grid-template-rows:repeat(5,auto) minmax(0,1fr);align-items:start;column-gap:clamp(12px,1.5vw,24px);row-gap:clamp(10px,2vh,24px)}
+.fl{font-size:clamp(11px,.93vw,15px);letter-spacing:.1em;color:var(--i);white-space:nowrap;justify-self:start;padding-top:7px}
+.fl i{font-style:normal;font-size:.78em;letter-spacing:.02em;color:#c0392b;margin-left:.6em}
+.fm input[type=text],.fm input[type=tel],.fm input[type=email],.fm select,.fm textarea{width:100%;-webkit-appearance:none;appearance:none;background:0;border:0;border-bottom:1px solid rgba(110,98,78,.65);border-radius:0;padding:6px 4px;font-family:inherit;font-size:clamp(11px,.95vw,16px);line-height:1.7;color:var(--i);outline:0;transition:border-color .3s ease,background .3s ease}
+.fm select{background:url("data:image/svg+xml;charset=utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' fill='none' stroke='%236b5f4b' stroke-width='1.2'/%3E%3C/svg%3E") right 6px center/12px 8px no-repeat;padding-right:24px;cursor:pointer}
+/* ★内容欄が残りの高さを全部使う＝下の余白をつぶす */
+.fm textarea{height:100%;min-height:clamp(90px,12vh,220px);resize:none;align-self:stretch}
+.fm ::placeholder{color:#a1957e}
+.fm input:focus,.fm select:focus,.fm textarea:focus{border-bottom-color:#6b5f4b}
+.fhp{position:absolute!important;left:-9999px!important;width:1px!important;height:1px!important;opacity:0!important;pointer-events:none}
+.fag{flex:0 0 auto;display:flex;align-items:center;justify-content:center;gap:10px;margin-top:clamp(12px,2.2vh,26px);font-size:clamp(11px,.88vw,14px);letter-spacing:.08em;color:var(--im);cursor:pointer}
+.fag input{width:16px;height:16px;flex-shrink:0;accent-color:#6b655c}
+.fer{flex:0 0 auto;min-height:1.2em;margin-top:8px;text-align:center;font-size:clamp(10px,.82vw,13px);letter-spacing:.05em;color:#9a3f2f}
+.fsb{flex:0 0 auto;display:block;width:clamp(140px,15.5vw,215px);margin:clamp(8px,1.4vh,16px) auto 0;padding:clamp(9px,1.3vh,14px) 0;background:#a5a099;border:0;color:#fff;font-family:inherit;font-size:clamp(11px,.95vw,15px);letter-spacing:.3em;text-indent:.3em;cursor:pointer;transition:background .4s ease,transform .4s var(--E)}
+.fsb:hover{background:#8d8880}
+.fsb:active{transform:translateY(2px)}
+.fsb[disabled]{opacity:.45;pointer-events:none}
+.fok{display:none;flex-direction:column;align-items:center;justify-content:center;gap:14px;height:100%;text-align:center}
+.fR.done .fm .fw,.fR.done .fag,.fR.done .fer,.fR.done .fsb{display:none}
+.fR.done .fok{display:flex}
+.fok b{font-weight:400;font-size:clamp(15px,1.4vw,22px);letter-spacing:.18em;line-height:1.9;color:var(--i)}
+.fok p{font-size:clamp(10px,.85vw,13.5px);line-height:2.1;color:var(--im)}
+
+/* --- 左ページ：奥付（背表紙側） --- */
+.fL{position:absolute;inset:0;overflow:hidden;padding-left:var(--navW)}
+.fLin{position:relative;width:100%;height:100%}
+.flogo{position:absolute;left:50%;top:10.5%;width:27%;transform:translateX(-50%)}
+.flogo img{width:100%;display:block}
+
+/* 地図（嘉左衛門・平左衛門）。iframeは既定では操作を受けず、
+   クリックした時だけ操作できる＝地図の上でもホイールで本がめくれる */
+.fmaps{position:absolute;left:6%;right:2%;top:39%;height:29%;display:flex;justify-content:center;gap:clamp(18px,2.6vw,46px)}
+.fmap{display:flex;flex-direction:column;align-items:center;text-decoration:none;color:inherit;flex:1 1 0;max-width:47%}
+.fmapc{position:relative;width:100%;flex:1 1 auto;min-height:0;overflow:hidden;background:#e6e2d8;border:1px solid rgba(58,50,40,.18);cursor:pointer}
+.fmapc iframe{position:absolute;inset:0;width:100%;height:100%;border:0;display:block;z-index:1;pointer-events:none;filter:saturate(.82) contrast(.96)}
+.fmapc.on iframe{pointer-events:auto}
+.fmapc:after{content:"クリックで操作";position:absolute;z-index:2;right:0;top:0;padding:3px 7px;font-size:clamp(8px,.62vw,10px);letter-spacing:.06em;color:#fff;background:rgba(42,34,26,.62);transition:opacity .35s;pointer-events:none}
+.fmapc.on:after{opacity:0;pointer-events:none}
+.fcap{writing-mode:horizontal-tb;text-align:center;margin-top:9px}
+.fcap b{display:block;font-weight:400;font-size:clamp(9px,.75vw,12px);letter-spacing:.1em;color:var(--il);line-height:1.85}
+.fcap em{display:block;font-style:normal;font-size:clamp(12px,1.07vw,17px);letter-spacing:.12em;color:var(--i);line-height:1.85}
+.fcap span{display:block;font-size:clamp(9px,.75vw,12px);letter-spacing:.06em;color:var(--im);line-height:1.85}
+.fcap a{color:inherit;text-decoration:none;border-bottom:1px solid rgba(58,50,40,.3)}
+.fcap a:hover{opacity:.65}
+
+.fft{position:absolute;left:8%;right:2%;top:82.4%}
+.fft p{font-size:clamp(11px,.93vw,15px);letter-spacing:.08em;line-height:1.95;color:var(--i)}
+.fgr{display:flex;align-items:flex-start;gap:12px;margin-top:clamp(10px,1.7vh,20px);max-width:76%}
+.fgr img{width:clamp(30px,2.6vw,42px);flex-shrink:0;display:block}
+.fgrl{width:clamp(30px,2.6vw,42px);height:clamp(30px,2.6vw,42px);flex-shrink:0;border:1px solid rgba(58,50,40,.35);display:flex;align-items:center;justify-content:center;font-size:8px;letter-spacing:.04em;color:var(--il);text-align:center;line-height:1.3}
+.fgr p{font-size:clamp(9px,.78vw,12.5px);line-height:1.85;color:var(--im);letter-spacing:.04em}
+.fsns{position:absolute;right:1.3%;bottom:5.9%;display:flex;gap:14px}
+.fsns a{display:flex;width:clamp(22px,1.9vw,30px);height:clamp(22px,1.9vw,30px);color:var(--i);transition:transform .45s var(--E),opacity .35s}
+.fsns a:hover{transform:translateY(-3px);opacity:.7}
+.fsns svg{width:100%;height:100%;display:block}
+
+/* ============================================================
+   10. 小さめの画面（PCレイアウトのまま縮める）
+   ============================================================ */
+@media(max-width:1100px){
+.m{--navW:clamp(58px,6vw,82px)}
+.ibs{gap:clamp(11px,1.5vw,22px)}
+.fw{column-gap:12px;row-gap:10px}
+.fmaps{gap:14px}
+}
+@media(max-width:768px){
+.m{--navW:56px;--logoW:76vw;--titleW:34%;--titleX:48%;--titleY:4%;--introFS:12px;--introX:62%;--introY:22%}
+.ni{font-size:13px;letter-spacing:.12em;padding-right:16px}
+.igg{grid-template-columns:repeat(2,1fr);grid-template-rows:repeat(3,1fr);gap:3.5% 3.5%}
+.igg .igc:nth-child(n+7){display:none}
+.tt{font-size:16px}
+.ts,.tg{font-size:8px}
+.fw{grid-template-columns:1fr;row-gap:6px}
+.fl{justify-self:start}
+}
+
+/* ============================================================
+   ■ v4 変更点まとめ（v3 → v4）
+   ------------------------------------------------------------
+   全体 …… 文字色を濃く（変数 --im/--il/--if を埋め込み側で変更）
+            左ナビを白背景＋文字拡大（--navFS）
+            #p0〜#p8 の重なり順をCSSで先に確定（チラ見え対策）
+   00 …… タイトルロゴ 22%→34%相当に拡大・イラスト寄りへ移動
+            コピー文を内側へ寄せ、文字サイズ13→16.5px、行間を実測値へ
+   01 …… 区切り線・見出し・説明・矢印の位置をすべて実測値へ
+   02 …… 見出し拡大／カード縦長化／写真6:5／キャプション4行（右5行）
+   03-08 … 本文15px・行間2.13、見出し33.5px、リード23.5px、
+            情報ブロック13px・行間2.0、画像座標を実測値へ
+   09 …… タイトルとフォームの重なり解消、内容欄が縦に伸びて余白を解消
+            左ページに .fLin を新設（左ナビに文字が潜る不具合の解消）
+            嘉左衛門・平左衛門を Googleマップ埋め込みへ
+   ============================================================ */
