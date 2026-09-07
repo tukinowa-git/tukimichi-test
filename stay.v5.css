@@ -1,0 +1,136 @@
+/*! stay.v5.css — 月みちて、山となる。 とまる詳細ページ 追加スタイル
+ *  2026-09-07 / 見開き1枚・めくりなし（嘉左衛門／平左衛門で共用）
+ *
+ *  ■ 使い方
+ *    book.v5.css を先に読み込み、そのあとにこのファイルを読み込みます。
+ *    book.v5.css は一切変更していません。ここは追加分だけです。
+ *    左ナビ・右下ボタン・背景・ノドの線・写真の枠・本文（.bd）は
+ *    すべて book.v5.css のものをそのまま使っています。
+ *    トップページと同じ描画になることが、遷移演出が成立する前提だからです。
+ *
+ *  ■ 座標のきまり（book.v5.css と同じ）
+ *    .pgIn 内の要素 …… そのページの本文領域に対する %
+ *                      左ページ＝幅604（1400−左ナビ96−右ページ700）
+ *                      右ページ＝幅700
+ *    .xs（見開きをまたぐ画像）…… 見開き全体に対する %
+ *    数値はすべて 1400×868 の設計データを画素実測して算出しています。
+ *
+ *  ■ 実測の記録（設計データ上の画素）
+ *    2F間取り x201-471 y105-259 ／ 1F間取り x177-504 y323-494
+ *    情報欄   x200-687 y592-815 ／ プランリンク x152-176 y697-815
+ *    紋       x1271-1311 y257-295 ／ 題字 x1272-1311 y309-466（1字送り39.5px）
+ *    英字     x1320-1335 y329-455
+ *    本文     x900-1199 y592-789 → book.v5.css の .bd.b と一致（追加指定なし）
+ *    見開き画像 x577-1198 y67-548 → とまる見開きと完全に同一の矩形
+ *    右下ボタン x1255-1345 y793-839 → とまる見開きと同一（追加指定なし）
+ *
+ *  更新するときはファイル名の版を上げること: stay.v5.css -> stay.v6.css
+ */
+
+/* ============================================================
+   0. 土台
+   ------------------------------------------------------------
+   トップと違い、めくる紙（.pp / .pf）がありません。
+   左右のページは静的な .cl / .cr にそのまま置いています。
+   ============================================================ */
+
+/* 埋め込み側の起動スクリプトが「このCSSが届いたか」を判定する目印。
+   届く前に中身を出すと位置が崩れて見えるため、これを見て出し始めます */
+.m.solo{--kzready:1}
+
+.m.solo .ni,.m.solo .cb,.m.solo .kzln{text-decoration:none}
+
+/* ノドの影。トップの .pf:before / .pf.b:before と同じ見え方にする */
+.m.solo .cl:before,.m.solo .cr:before{content:"";position:absolute;top:0;bottom:0;width:14px;z-index:30;pointer-events:none}
+.m.solo .cl:before{right:0;background:linear-gradient(270deg,rgba(42,34,26,.04),transparent)}
+.m.solo .cr:before{left:0;background:linear-gradient(90deg,rgba(42,34,26,.04),transparent)}
+
+/* このページ独自の縦書き要素 */
+.kzh,.kzg,.kzln,.kznm{writing-mode:vertical-rl;text-orientation:mixed}
+.kznm,.kzh{font-family:"ab-yoshienoryokan-b","Shippori Mincho","Noto Serif JP",serif;font-weight:400;font-style:normal}
+
+/* ============================================================
+   1. 左ページ：間取り図
+   ============================================================ */
+.kzfp{position:absolute;overflow:hidden;z-index:2}
+.kzfp.f2{left:17.38%;top:12.10%;width:44.87%;height:17.86%}
+.kzfp.f1{left:13.41%;top:37.21%;width:54.30%;height:19.82%}
+.kzfp img{width:100%;height:100%;object-fit:contain;display:block}
+
+/* 「2F」「1F」は画像に焼き込まず、HTMLの文字として置いています。
+   差し替え用の間取り図画像にはラベルを含めないでください */
+.kzfl{position:absolute;z-index:2;writing-mode:horizontal-tb;
+  font-size:var(--kzflFS,clamp(14px,min(1.57vw,3vh),25px));line-height:1;letter-spacing:.05em;color:var(--i)}
+.kzfl.f2{left:13.25%;top:31.51%}
+.kzfl.f1{left:13.91%;top:58.17%}
+
+/* ============================================================
+   2. 左ページ：情報欄
+   ------------------------------------------------------------
+   .kzi = 置き場（右づめ・右から左へ並ぶ）
+   .kzh = 「ゲストハウス」の見出し
+   .kzg = 1グループ。右から 見出し(b) → 中身(span)
+   .kzln= 「宿泊プランを見る」（下端そろえ・右側に罫線）
+   ============================================================ */
+.kzi{position:absolute;left:9.27%;right:2.15%;top:68.20%;height:25.81%;z-index:5;
+  display:flex;flex-direction:row-reverse;align-items:flex-start;justify-content:flex-start;
+  gap:var(--kziGap,clamp(5px,.685vw,13px))}
+.kzh{flex:0 0 auto;font-size:var(--kzhFS,clamp(14px,min(1.43vw,2.75vh),23px));
+  letter-spacing:.12em;line-height:1.2;color:var(--i);white-space:nowrap}
+/* ★縦書き（vertical-rl）の中では flex-direction:row が「縦方向」に走ります。
+   見出しと中身を横に並べたいので column を使います（縦書きでは右→左になる） */
+.kzg{flex:0 0 auto;display:flex;flex-direction:column;align-items:stretch;gap:0;height:100%;
+  font-size:var(--kziFS,clamp(11px,min(1.14vw,2.2vh),18px));line-height:1.5;letter-spacing:0;color:var(--im)}
+/* ★字間を入れると1行が桁の高さ（223px）に収まらず、桁数が設計より増えます。
+   設計の桁数（客室4／設備5／住所2／アクセス7）はこの letter-spacing:0 が前提です */
+.kzg b{flex:0 0 auto;font-weight:400;color:var(--i);white-space:nowrap}
+.kzg span{flex:0 1 auto}
+.kzln{flex:0 0 auto;align-self:flex-end;
+  font-size:var(--kzlnFS,clamp(11px,min(1.14vw,2.2vh),18px));letter-spacing:.06em;line-height:1.6;
+  color:var(--im);white-space:nowrap;cursor:pointer;
+  padding-right:5px;border-right:1px solid rgba(58,50,40,.5);
+  transition:opacity .35s,transform .35s var(--E)}
+.kzln:hover{opacity:.6}
+.kzln:active{transform:translateY(2px)}
+
+/* ============================================================
+   3. 右ページ：紋・題字・英字
+   ------------------------------------------------------------
+   本文は book.v5.css の .bd.b をそのまま使うので指定なし
+   ============================================================ */
+.kzem{position:absolute;right:12.71%;top:29.61%;width:5.86%;height:4.49%;z-index:5}
+.kzem img{width:100%;height:100%;object-fit:contain;display:block}
+.kznm{position:absolute;right:12.71%;top:35.60%;z-index:5;margin:0;
+  font-size:var(--kznFS,clamp(24px,min(2.81vw,5.4vh),47px));line-height:1;letter-spacing:0;
+  color:var(--i);white-space:nowrap}
+.kzR .ibk{position:absolute;right:9.29%;top:37.90%;z-index:5;letter-spacing:.21em}
+
+/* ============================================================
+   4. 素材待ちのプレースホルダー
+   ------------------------------------------------------------
+   実素材が届いたら tmpb を外して <img> を入れるだけです
+   ============================================================ */
+.tmpb{background:rgba(42,34,26,.045);border:1px dashed rgba(58,50,40,.32);
+  display:flex;align-items:center;justify-content:center}
+.tmpb:after{content:attr(data-lbl);writing-mode:horizontal-tb;
+  font-size:clamp(8px,.75vw,12px);letter-spacing:.14em;line-height:1.9;
+  color:var(--il);text-align:center;padding:0 8%}
+
+/* ============================================================
+   5. 小さめの画面
+   ============================================================ */
+@media(max-width:1100px){
+.kzi{gap:clamp(7px,.95vw,14px)}
+.kzg{gap:.35em}
+}
+
+/* スマホ幅では book.v5.css により .m ごと非表示になります。
+   真っ白にならないよう、ひとことだけ出しておきます。
+   スマホ版（Phase 4）を作ったらこのブロックごと削除してください */
+.kzsp{display:none}
+@media(max-width:768px){
+.kzsp{display:flex;align-items:center;justify-content:center;
+  position:fixed;inset:0;z-index:9000;padding:12vw;
+  background:#faf6ef;color:#3a3025;text-align:center;line-height:2.1;
+  font-family:"Shippori Mincho","Noto Serif JP",serif;font-size:15px;letter-spacing:.06em}
+}
