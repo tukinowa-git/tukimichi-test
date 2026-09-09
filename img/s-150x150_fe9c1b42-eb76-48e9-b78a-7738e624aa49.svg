@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg id="_レイヤー_2" data-name="レイヤー 2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40">
+  <defs>
+    <style>
+      .cls-1 {
+        fill: none;
+        stroke: #fff;
+        stroke-linejoin: round;
+        stroke-width: 1px;
+      }
+
+      .cls-1, .cls-2 {
+        fill-rule: evenodd;
+      }
+
+      .cls-2 {
+        fill: #251714;
+        opacity: .5;
+      }
+    </style>
+  </defs>
+  <g id="_背景" data-name="背景">
+    <g>
+      <path class="cls-2" d="M20,40c11.02,0,20-8.98,20-20S31.02,0,20,0,0,8.98,0,20s8.98,20,20,20h0Z"/>
+      <polygon class="cls-1" points="27.66 19.2 27.66 29.96 21.85 29.96 21.85 23.66 18.15 23.66 18.15 29.96 12.33 29.96 12.33 19.2 8.45 19.2 20 10.04 31.55 19.2 27.66 19.2"/>
+    </g>
+  </g>
+</svg>
