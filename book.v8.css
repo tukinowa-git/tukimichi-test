@@ -1,0 +1,638 @@
+/*! book.v8.css — 月みちて、山となる。 PC版 スタイル本体
+ *  2026-09-11 / 10見開き構成（00ローディング〜09お問い合わせ）
+ *
+ *  ■ v7 → v8 の変更（お問い合わせの見開きのみ。1〜8・11・12章の見た目は不変）
+ *    1. 地図を左ページ → 右ページのフォームの下へ。横並び・縦横比3:2で固定・モノクロ。
+ *    2. 左ページはタイトルロゴの下にロゴマーク（.fbr）。地図が抜けた空きを埋める。
+ *    3. 左ページのノド側に余白 --fgut。SNSアイコンと奥付をノドから離した。
+ *    4. 送信ボタンに角R。必須がそろうと色が深まる（.rdy）／送信中の表示（.busy）。
+ *    5. 入力欄に反応を追加：ホバーで下線が濃く／入力中は左から墨の線が引かれ、
+ *       ラベルの左に筆の縦線／入力済みで「※必須」が淡く／要修正で赤茶の線。
+ *       同意のチェックは線が描かれるアニメーションに。
+ *    6. 2章に「裏返っている面を隠す」指定（.pp.tn / .pp.st）。
+ *       これが無いと、フォームの上に紙の裏面（すまう左）がかぶり、入力できませんでした。
+ *
+ *  ■ v6 → v7 の変更（5点）
+ *    1. 左ナビの選択マーク（.ni span:after）を STUDIO から自リポジトリの
+ *       img/nav-mark.svg へ。相対参照にしてあるので、このCSSが jsDelivr
+ *       から来れば画像も jsDelivr、GitHub Pages から来れば画像も
+ *       GitHub Pages になります。フォールバックが自動で揃います。
+ *    2. 「私たちのこと」ボタンの枠（.ab）を img/btn-frame.svg へ。
+ *       あわせて aspect-ratio を 153/641 から SVG の実値 41.82/176.21 に。
+ *    3. 助成ロゴ（.fgrl）を仮の枠（枠線＋「助成ロゴ」の文字）から
+ *       実画像用に。枠線を外し、img を contain で収めます。
+ *    4. 英字（.ibk / .ibl）に Karla を指定。設計どおりの見た目になります。
+ *       読み込みは埋め込み側の Google Fonts の1行で行います。
+ *    5. これで STUDIO のストレージへの参照はゼロになりました。
+ *
+ *  ■ v5 → v6 の変更
+ *    1〜11章は v5 と一字一句同じ（遷移の既定速度2箇所のみ短縮）。
+ *    第12章として stay.v5.css の内容を丸ごと取り込みました。
+ *    詳細ページが読み込むCSSが1本に減り、トップで既にキャッシュ済みに
+ *    なるため、遷移がその分だけ速くなります。stay.v5.css はもう使いません。
+ *
+ *  v3→v4 の変更点は末尾の「■ v4 変更点まとめ」を参照
+ *
+ *  埋め込み側（STUDIO body末尾）に残しているもの:
+ *    - CSS変数（--navW / --logoW / --titleX などの調整ノブ）
+ *    - box-sizing リセットと骨格（.bc .bk .cl .cr .pp .pf）
+ *    - 起動前に他ページを隠す .m.pre（外部CSSが届く前に効かせるため）
+ *
+ *  ■ 座標のきまり ------------------------------------------------
+ *  .pgIn / .fLin 内の要素 … 「そのページの本文領域（左ナビを除いた幅）」に対する %
+ *  .xs（見開きをまたぐ画像）… 「見開き全体」に対する %
+ *                    0=左端 / 50=ノド（背） / 100=右端
+ *  数値はすべて 1400×868 の設計データを画素実測して算出しています。
+ *  ---------------------------------------------------------------
+ *  更新するときはファイル名の版を上げること: book.v8.css -> book.v9.css
+ */
+
+/* ============================================================
+   0. 縦書き・書体の共通指定
+   ============================================================ */
+.vt,.ni,.itx,.hh,.hb,.at,.tl,.tt,.ts,.tg,.igt,.kw,.lead,.bd,
+.ibk,.ibn,.ibm,.ibd,.ibl,.fh,.fcap{writing-mode:vertical-rl;text-orientation:mixed}
+.ni,.tt,.kw,.igt,.igb b{font-family:"ab-yoshienoryokan-b","Shippori Mincho","Noto Serif JP",serif!important;font-weight:400!important;font-style:normal!important}
+
+/* ============================================================
+   1. 左ナビ / scroll / 右下ボタン
+   ------------------------------------------------------------
+   ★v4: 背景を白に。文字を大きく・濃く。区切り線は設計どおり淡いグレー。
+   ============================================================ */
+.nv{position:absolute;left:0;top:0;bottom:0;width:var(--navW);z-index:500;display:flex;flex-direction:column;justify-content:center;
+    padding:4vh 0 18vh;background:#fff;border-right:1px solid #dadad8}
+.nv{transform:translateX(-100%);opacity:0;visibility:hidden;pointer-events:none;transition:transform .7s cubic-bezier(.76,0,.24,1),opacity .45s ease,visibility .45s ease}
+.m.hn .nv{transform:translateX(0);opacity:1;visibility:visible;pointer-events:auto}
+.ni{position:relative;width:100%;flex:1 1 0;min-height:0;padding:8px 26% 8px 0;
+    font-size:var(--navFS);letter-spacing:.16em;line-height:1.15;color:var(--navC);cursor:pointer;
+    display:flex;align-items:center;justify-content:center;user-select:none;white-space:nowrap;
+    transition:color .35s,opacity .35s}
+.ni:hover{color:#111}
+.ni span{position:relative;display:block}
+.ni span:after{content:"";position:absolute;top:-2px;bottom:-2px;left:calc(100% + .45em);width:3px;background:url("img/nav-mark.svg") center/100% 100% no-repeat;opacity:0;transition:opacity .6s ease;pointer-events:none}
+.ni.on{color:#111}
+.ni.on span:after{opacity:1}
+
+/* scroll インジケーター（ローディングから最後の1つ手前まで出る） */
+.si{position:absolute;bottom:clamp(22px,3.4vh,34px);left:clamp(38px,4vw,62px);z-index:520;display:flex;align-items:center;gap:10px;font-size:clamp(10px,.85vw,12px);letter-spacing:.15em;color:var(--il);cursor:pointer;user-select:none;opacity:0;transition:opacity .6s ease,left .7s cubic-bezier(.76,0,.24,1)}
+.m .si{opacity:.75}
+.m.hn .si{left:calc(var(--navW) + clamp(28px,2.4vw,42px))}
+.m.last .si{opacity:0;pointer-events:none}
+.si:hover{opacity:1}
+.sl{width:40px;height:1px;background:var(--if);position:relative;overflow:hidden}
+.sl:after{content:"";position:absolute;top:0;left:0;width:30%;height:100%;background:var(--i);animation:sp 2.2s ease-in-out infinite}
+@keyframes sp{0%{left:-30%;opacity:0}50%{opacity:1}100%{left:100%;opacity:0}}
+
+/* 右下の丸ボタン（テーマ見開きのみ） */
+.cn{position:absolute;right:clamp(30px,3vw,58px);bottom:clamp(26px,4vh,48px);z-index:520;display:flex;align-items:center;gap:clamp(14px,1.5vw,22px);transform:translateX(46px);opacity:0;visibility:hidden;pointer-events:none;transition:transform .7s cubic-bezier(.76,0,.24,1),opacity .5s ease,visibility .5s ease}
+.m.hcn .cn{transform:translateX(0);opacity:1;visibility:visible;pointer-events:auto}
+.cb{position:relative;display:flex;width:clamp(42px,3.2vw,54px);height:clamp(42px,3.2vw,54px);border-radius:50%;text-decoration:none;border:0;padding:0;background:0;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:transform .55s var(--E),filter .55s ease}
+.cb img{width:100%;height:100%;display:block;object-fit:contain;pointer-events:none;transition:transform .55s var(--E)}
+.cb:before{content:"";position:absolute;inset:-1px;border-radius:50%;border:1px solid rgba(42,34,26,.4);opacity:0;transform:scale(.82);transition:opacity .55s ease,transform .65s var(--E);pointer-events:none}
+.cb:hover{transform:translateY(-6px);filter:drop-shadow(0 9px 15px rgba(42,34,26,.22))}
+.cb:hover img{transform:scale(1.04)}
+.cb:hover:before{opacity:1;transform:scale(1.16)}
+.cb:active{transform:translateY(-2px)}
+
+/* ============================================================
+   2. 本のめくり・ノド
+   ============================================================ */
+.spn{position:absolute;left:50%;top:0;bottom:0;width:10px;transform:translateX(-50%);z-index:150;pointer-events:none;background:linear-gradient(90deg,transparent,rgba(42,34,26,.05) 50%,transparent);transition:opacity .6s ease}
+.m.ld .spn{opacity:0}
+.m.ld #p0>.pf:not(.b):before{opacity:0}
+.pf:before{content:"";position:absolute;top:0;bottom:0;right:0;width:14px;background:linear-gradient(270deg,rgba(42,34,26,.04),transparent);z-index:30;pointer-events:none;transition:opacity .6s ease}
+.pf.b:before{right:auto;left:0;background:linear-gradient(90deg,rgba(42,34,26,.04),transparent)}
+.fs{position:absolute;inset:0;pointer-events:none;background:linear-gradient(250deg,transparent,transparent 35%,rgba(0,0,0,.18) 65%,rgba(0,0,0,.35));opacity:0;z-index:40}
+
+/* ★v8: 裏返っている面を隠す。見た目は変わりません（もともと backface-visibility で見えていない面）。
+   Chrome は見えていない裏面にもクリックを届けてしまうため、お問い合わせのフォームの上に
+   同じ紙の表面（すまう左）の文字や写真がかぶり、入力欄を押しても反応しませんでした。
+   .tn＝めくり終わった紙（表面を隠す）／.st＝まだめくっていない紙（裏面を隠す）。
+   めくっている最中の紙は JS が両方を外すので、両面が見えたままめくれます。 */
+.pp.tn>.pf:not(.b),.pp.st>.pf.b{visibility:hidden}
+
+/* ★v4-①: JSが動く前でも紙の重なり順を正しくしておく（他ページのチラ見え防止） */
+#p0{z-index:90}#p1{z-index:80}#p2{z-index:70}#p3{z-index:60}#p4{z-index:50}
+#p5{z-index:40}#p6{z-index:30}#p7{z-index:20}#p8{z-index:10}
+
+/* ============================================================
+   3. ページの土台
+   ============================================================ */
+.pgL,.pgR{position:absolute;inset:0;overflow:hidden}
+.pgL{padding-left:var(--navW)}
+.pgIn{position:relative;width:100%;height:100%}
+
+/* 見開きをまたぐ画像。--x1/--x2/--y1/--y2 は「見開き全体」に対する数値（%記号なし） */
+.xs{position:absolute;inset:0;overflow:hidden;z-index:1;pointer-events:none}
+.xs>i{position:absolute;display:block;overflow:hidden;
+  left:calc(var(--x1) * 2%);width:calc((var(--x2) - var(--x1)) * 2%);
+  top:calc(var(--y1) * 1%);height:calc((var(--y2) - var(--y1)) * 1%)}
+.xs.r>i{left:calc((var(--x1) - 50) * 2%)}
+.xs img{width:100%;height:100%;object-fit:cover;display:block;background:#ded9cf}
+
+/* 片ページに収まる画像。--l/--t/--w/--h は「そのページの本文領域」に対する数値 */
+.ph{position:absolute;left:calc(var(--l) * 1%);top:calc(var(--t) * 1%);width:calc(var(--w) * 1%);height:calc(var(--h) * 1%);overflow:hidden;z-index:1}
+.ph img{width:100%;height:100%;object-fit:cover;display:block;background:#ded9cf}
+/* 差し替え待ちのプレースホルダー */
+.ph.tmp img,.xs.tmp img{filter:grayscale(1) contrast(.35) brightness(1.28)}
+.ph.tmp:after,.xs.tmp:after{content:attr(data-lbl);position:absolute;left:0;right:0;top:50%;transform:translateY(-50%);text-align:center;font-size:clamp(10px,.85vw,13px);letter-spacing:.2em;color:#fff;pointer-events:none}
+
+/* ============================================================
+   4. ページ00 ローディング（見開きロゴ）
+   ------------------------------------------------------------
+   ★v4: タイトルロゴを設計実測サイズ（約1.9倍）へ拡大し、
+         中央のロゴイラストに寄せて配置。コピー文も内側へ寄せ、
+         文字サイズと行間を設計の実測値に合わせた。
+   ============================================================ */
+.ir.cd .itl,.ir.cd .ilh{display:none}
+.itl{position:absolute;left:var(--titleX);bottom:var(--titleY);width:var(--titleW);z-index:6}
+.itx{position:absolute;right:var(--introX);top:var(--introY);font-size:var(--introFS);letter-spacing:.27em;line-height:1.75;color:var(--i);z-index:6}
+.itx span{display:block}
+.itx span+span{margin-block-start:.65em}
+.itl,.itx span,.ilh img{opacity:0}
+.ilh{position:absolute;top:var(--logoY);width:calc(var(--logoW) / 2);height:calc(var(--logoW) / var(--logoAR));z-index:5;overflow:hidden;pointer-events:none;transform:translateY(-50%)}
+.ilh.l{right:0}
+.ilh.r{left:0}
+.ilh img{position:absolute;top:0;width:200%;height:100%;object-fit:contain;max-width:none;will-change:opacity,transform,filter}
+.ilh.l img{left:0}
+.ilh.r img{right:0}
+
+/* ============================================================
+   5. ページ01 右＝イントロ ／ 左＝目次
+   ============================================================ */
+/* --- 右ページ：ものがたりのはじまりへようこそ。 --- */
+.hr{position:absolute;inset:0;overflow:hidden}
+.hh{position:absolute;right:25%;top:29.5%;font-size:clamp(18px,min(1.93vw,3.9vh),32px);font-weight:400;letter-spacing:.16em;line-height:1.9;color:var(--i);white-space:nowrap}
+.hh span{display:block}
+.hb{position:absolute;right:39.5%;top:29%;height:46%;font-size:clamp(11px,min(1.11vw,1.85vh),17px);line-height:2.55;letter-spacing:.04em;color:var(--im)}
+.ab{position:absolute;top:50.5%;right:66%;display:flex;align-items:center;justify-content:center;height:25%;aspect-ratio:41.82/176.21;background:url("img/btn-frame.svg") center/contain no-repeat;text-decoration:none;z-index:5;transition:transform .55s var(--E),filter .55s ease}
+.af{position:absolute;left:15%;right:15%;top:17%;bottom:7%;background:linear-gradient(180deg,rgba(42,34,26,.08),rgba(42,34,26,.02) 58%,transparent);opacity:0;transition:opacity .55s ease;pointer-events:none}
+.at{position:relative;z-index:1;font-size:clamp(10px,.85vw,14px);letter-spacing:.22em;line-height:1.8;color:var(--i);padding-top:6%;transition:color .45s ease,transform .55s var(--E)}
+.ab:hover{transform:translateY(7px);filter:drop-shadow(0 7px 11px rgba(42,34,26,.13))}
+.ab:hover .af{opacity:1}
+.ab:hover .at{color:#000;transform:translateY(4px)}
+
+/* --- 左ページ：目次 ---
+   設計実測：区切り線 y220..690 / 桁ピッチ83.7px / 見出し y235 / 説明 y361 / 矢印 y660 */
+.tc{position:absolute;inset:0;overflow:hidden}
+.tl{position:absolute;right:15.9%;top:15.1%;font-size:clamp(11px,.93vw,15px);letter-spacing:.30em;color:var(--im)}
+.tls{position:absolute;left:0;right:2.9%;top:25.3%;height:54.2%;display:flex;flex-direction:row-reverse;align-items:stretch;justify-content:center}
+.ti{position:relative;display:flex;flex-direction:column;align-items:center;width:11.95%;padding:0 0 4.7%;cursor:pointer;text-decoration:none;color:inherit;-webkit-tap-highlight-color:transparent}
+.ti:before{content:"";position:absolute;right:0;top:0;bottom:0;width:1px;background:rgba(58,50,40,.3);transform-origin:top center;transition:background .45s ease,transform .55s var(--E)}
+.ti:last-child{border-left:1px solid rgba(58,50,40,.3)}
+.ti:after{content:"";position:absolute;inset:0 8%;background:linear-gradient(180deg,rgba(42,34,26,.05),transparent 55%);opacity:0;transition:opacity .5s ease;pointer-events:none}
+.tt{font-size:clamp(19px,min(1.93vw,4.1vh),33px);letter-spacing:.10em;line-height:1.15;color:var(--i);height:29.5%;padding-top:3%;white-space:nowrap;transition:color .45s ease,transform .55s var(--E)}
+.tx{display:flex;flex-direction:row-reverse;align-items:flex-start;justify-content:center;gap:clamp(8px,.9vw,14px);flex:1 1 auto;min-height:0;margin-top:.5%}
+.ts,.tg{white-space:nowrap;line-height:1.6;transition:color .45s ease,transform .55s var(--E)}
+.ts{font-size:clamp(10px,min(.86vw,1.8vh),13.5px);letter-spacing:.12em;color:var(--im)}
+.tg{font-size:clamp(9px,min(.79vw,1.65vh),12.5px);letter-spacing:.10em;color:var(--il)}
+.ta{display:block;margin-top:auto;padding-top:4%;transition:transform .55s var(--E)}
+.ta i{display:block;width:9px;height:9px;border-right:1.3px solid var(--il);border-bottom:1.3px solid var(--il);transform:rotate(45deg);transition:border-color .45s ease}
+.ti:hover .tt{color:#000;transform:translateY(-7px)}
+.ti:hover .ts,.ti:hover .tg{color:var(--i);transform:translateY(-3px)}
+.ti:hover:before{background:rgba(42,34,26,.72)}
+.ti:hover:after{opacity:1}
+.ti:hover .ta{animation:bob 1.2s ease-in-out infinite}
+.ti:hover .ta i{border-color:#2a221a}
+@keyframes bob{0%,100%{transform:translateY(3px)}50%{transform:translateY(9px)}}
+.ti:active .tt{transform:translateY(-3px) scale(.97)}
+
+/* ============================================================
+   6. ページ02 日々のあれこれ（Instagram）
+   ------------------------------------------------------------
+   ★v4: 見出しを拡大。カードを縦長にし、写真を横長（6:5）にして
+         キャプションの表示行数を 3→4（右ページは5）に増やした。
+   ============================================================ */
+.igl,.igr{position:absolute;inset:0;overflow:hidden}
+.igb{position:absolute;left:7.3%;top:5.2%;display:flex;align-items:center;gap:11px;color:#1d1710;z-index:5;text-decoration:none}
+.igb svg{width:clamp(18px,1.5vw,24px);height:clamp(18px,1.5vw,24px);display:block}
+.igb b{font-weight:400;font-size:clamp(14px,1.35vw,21px);letter-spacing:.08em}
+.igt{position:absolute;right:11.7%;top:15.9%;font-size:var(--igtFS);letter-spacing:.22em;line-height:1.65;color:var(--i);z-index:5}
+.igt span{display:block}
+
+/* 左ページ：6枚グリッド */
+.igg{position:absolute;left:5.4%;top:17%;width:88%;height:71%;display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(2,1fr);gap:6% 4.7%;direction:rtl}
+/* 右ページ：最新1件を大きく */
+.igf{position:absolute;left:24.9%;top:26.5%;width:47.9%;height:52%}
+.igf .igc{width:100%;height:100%;display:flex;flex-direction:column}
+.igf .igc img{flex:1 1 auto;min-height:0;aspect-ratio:auto}
+.igf .igd{font-size:clamp(9px,.8vw,12px)}
+.igf .igp{font-size:clamp(10px,.9vw,13.5px);-webkit-line-clamp:5}
+
+.igc{direction:ltr;text-align:left;display:block;background:#fff;padding:clamp(7px,.65vw,11px) clamp(7px,.65vw,11px) clamp(11px,1vw,15px);box-shadow:0 5px 16px rgba(42,34,26,.13);text-decoration:none;color:inherit;overflow:hidden;transition:transform .5s var(--E),box-shadow .5s ease}
+.igc:hover{transform:translateY(-5px);box-shadow:0 12px 24px rgba(42,34,26,.18)}
+.igc img{width:100%;aspect-ratio:6/5;object-fit:cover;display:block;background:#ece7dc}
+.igd{font-size:clamp(8px,.7vw,11px);letter-spacing:.14em;color:var(--il);margin:clamp(6px,.8vh,11px) 2px clamp(3px,.4vh,6px)}
+.igp{font-size:clamp(9px,.78vw,12px);line-height:1.85;letter-spacing:.03em;color:var(--im);margin:0 2px;display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden}
+
+/* ============================================================
+   7. ページ03〜08 テーマ見開き（共通パーツ）
+   ------------------------------------------------------------
+   設計実測：本文の桁ピッチ32px（＝15px×2.13）／見出し桁ピッチ39px
+             リード桁幅24px／情報ブロックの桁ピッチ26px（＝13px×2.0）
+   ============================================================ */
+/* --- 右ページ：見出し／リード／本文 --- */
+.kw{position:absolute;right:7.3%;top:17.3%;font-size:clamp(22px,min(2.39vw,4.65vh),40px);letter-spacing:.16em;line-height:1.16;color:var(--i);white-space:nowrap;z-index:5}
+.lead{position:absolute;right:13.9%;top:22.6%;font-size:clamp(15px,min(1.68vw,3.1vh),28px);letter-spacing:.11em;line-height:1.9;color:var(--i);white-space:nowrap;z-index:5}
+.bd{position:absolute;right:28.9%;font-size:var(--bdFS);line-height:2.13;letter-spacing:.04em;color:var(--im);z-index:5}
+.bd.t{top:7.6%;height:25%}
+.bd.b{top:68.2%;height:25%}
+
+/* --- 左ページ：情報ブロックの並び ---
+   .ibs = ブロックの置き場（右づめ・右から左へ並ぶ）
+   .ib  = 1ブロック。右から  見出し群(.ibc) → 説明(.ibd) → リンク(.ibl) の順 */
+.ibs{position:absolute;display:flex;flex-direction:row-reverse;align-items:flex-start;justify-content:flex-start;gap:clamp(14px,1.7vw,32px);z-index:5}
+.ib{display:flex;flex-direction:row-reverse;align-items:flex-start;gap:.55em;height:100%;max-width:100%}
+.ibc{display:flex;flex-direction:row-reverse;align-items:flex-start;gap:.4em;height:100%}
+.ibk{font-family:"Karla","Shippori Mincho","Noto Serif JP",serif;font-weight:300;font-size:clamp(9px,.78vw,12.5px);letter-spacing:.12em;line-height:1.7;color:var(--il);white-space:nowrap}
+.ibn{font-size:clamp(13px,min(1.25vw,2.5vh),20px);letter-spacing:.12em;line-height:1.6;color:var(--i);white-space:nowrap;margin-top:.35em}
+.ibn small{font-size:.62em;letter-spacing:.06em}
+.ibm{font-size:clamp(9px,.78vw,12.5px);letter-spacing:.06em;line-height:1.8;color:var(--il);white-space:nowrap;margin-top:2.2em}
+.ibm+.ibm{margin-top:1.1em}
+.ibd{font-size:var(--ibdFS);line-height:2;letter-spacing:.04em;color:var(--im);height:100%}
+.ibl{font-family:"Karla","Shippori Mincho","Noto Serif JP",serif;font-weight:400;position:relative;font-size:clamp(10px,.82vw,13px);letter-spacing:.08em;line-height:1.7;color:var(--im);text-decoration:none;align-self:flex-end;padding-top:26px;white-space:nowrap;cursor:pointer;transition:opacity .35s}
+.ibl:before{content:"";position:absolute;top:0;left:50%;transform:translateX(-50%);width:1px;height:20px;background:rgba(58,50,40,.55)}
+.ibl:hover{opacity:.6}
+.ibls{display:flex;flex-direction:row-reverse;align-items:flex-end;gap:clamp(10px,1.2vw,22px);align-self:flex-end;height:auto}
+
+/* ============================================================
+   8. 各テーマ見開きの個別レイアウト（すべて設計データの実測値）
+   ============================================================ */
+/* --- 03 とまる（左） --- */
+.k1L .ibs{left:9.4%;right:22%;top:68.2%;height:25.5%}
+/* --- 04 たべる（左） --- */
+.k2L .ibs{left:5.3%;right:6.8%;top:68.2%;height:25.5%}
+/* --- 05 しる（左） --- */
+.k3L .ibs.a{left:14.4%;right:45.7%;top:29.9%;height:17.9%}   /* 体験プログラム */
+.k3L .ibs.b{left:9.8%;right:45.5%;top:69.2%;height:21.9%}    /* ワークショップ */
+.k3L .ibs.c{left:73.7%;right:2.6%;top:68.3%;height:24.8%}    /* ツアーガイド */
+/* --- 06 ためす（左） --- */
+.k4L .ibs.a{left:11.6%;right:26.7%;top:30.8%;height:17.9%}
+.k4L .ibs.b{left:16.1%;right:27.2%;top:72%;height:21.4%}
+/* --- 07 つくる（左） --- */
+.k5L .ibs{left:5.3%;right:7.1%;top:68.2%;height:25.5%}
+/* --- 08 すまう（左） --- */
+.k6L .ibs.a{left:12.8%;right:31%;top:9%;height:23.9%}
+.k6L .ibs.b{left:12.8%;right:30.6%;top:39.4%;height:23.7%}
+
+/* ============================================================
+   9. ページ09 お問い合わせ
+   ------------------------------------------------------------
+   ★v8: 地図を左ページから右ページ（フォームの下）へ。横並び・3:2・モノクロ。
+         左ページはタイトルロゴの下にロゴマークを大きく置いて空きを埋める。
+         ノド（見開きの境）側に余白 --fgut を設ける。
+         入力欄に ホバー／入力中／入力済み／要修正 の反応を追加。
+   調整ノブ（埋め込み側の <style> に書くと上書きできます。書き方は各行の［ ］）
+     --fgut  左ページのノド側の余白          既定 clamp(26px,3.9vw,64px) ［.m .fL{--fgut:48px}］
+     --fltH  タイトルロゴの高さ（組の中の%）  既定 35%  ［.m{--fltH:32%}］
+     --fmkH  ロゴマークの高さ（組の中の%）    既定 41%  ［.m{--fmkH:44%}］
+     --fmapW 地図1枚の幅                     既定 min(46%,21vh) ［.m{--fmapW:44%}］
+     --fcx   同意〜ボタン〜地図の中心を右へ寄せる量 既定 3.6% ［.m .fcol{--fcx:0%}］
+             （設計では、この3つは入力欄の列ではなく「見出しまで含めた幅」の中央にそろっている）
+   ============================================================ */
+/* --- 右ページ：見出し --- */
+.fR{position:absolute;inset:0;overflow:hidden}
+.fh{position:absolute;right:9.7%;top:7.8%;font-size:clamp(15px,min(1.43vw,2.9vh),24px);letter-spacing:.27em;line-height:1.5;color:var(--i);z-index:6}
+
+/* --- 右ページ：フォーム（上）と地図（下）を縦に積む柱 ---
+   フォームが残りの高さを吸収し、内容欄がそのぶん伸び縮みします */
+.fcol{--fcx:3.6%;position:absolute;left:18.5%;right:18.6%;top:9.5%;bottom:7.3%;display:flex;flex-direction:column}
+.fm{position:relative;flex:1 1 auto;min-height:0;display:flex;flex-direction:column;overscroll-behavior:contain}
+.fw{flex:1 1 auto;min-height:0;display:grid;grid-template-columns:auto minmax(0,1fr);grid-template-rows:repeat(5,auto) minmax(0,1fr);column-gap:clamp(12px,1.5vw,24px);row-gap:clamp(5px,1.6vh,19px)}
+/* 1行＝ラベル＋入力欄。subgrid でラベルの列幅を全行でそろえる */
+.frw{grid-column:1/-1;display:grid;grid-template-columns:subgrid;align-items:start;min-height:0}
+.frw.fta{align-items:stretch}
+
+/* ラベル。入力中は左に筆の縦線（左ナビの選択マークと同じ絵）が立つ */
+.fl{position:relative;font-size:clamp(11px,1.02vw,16px);letter-spacing:.1em;color:var(--im);white-space:nowrap;justify-self:start;align-self:start;padding-top:7px;cursor:pointer;transition:color .35s ease}
+.fl:before{content:"";position:absolute;left:-.8em;top:calc(7px + .1em);height:1.15em;width:2.5px;background:url("img/nav-mark.svg") center/100% 100% no-repeat;opacity:0;transform:scaleY(.15);transform-origin:50% 0;transition:opacity .3s ease,transform .6s var(--E);pointer-events:none}
+.fl i{font-style:normal;font-size:.78em;letter-spacing:.02em;color:#c0392b;margin-left:.6em;transition:color .6s ease}
+.frw:hover .fl,.frw:focus-within .fl{color:var(--i)}
+.frw:focus-within .fl:before{opacity:1;transform:none}
+.frw.good .fl i{color:var(--if)}
+.frw.bad .fl i{color:#9a3f2f}
+
+/* 入力欄の下線は2本重ね。:before＝素の線／:after＝入力中に左から引かれる墨の線 */
+.fi{position:relative;display:block;min-width:0}
+.frw.fta .fi{height:100%}
+.fi:before,.fi:after{content:"";position:absolute;left:0;right:0;bottom:0;pointer-events:none}
+.fi:before{height:1.5px;background:rgba(110,98,78,.6);transition:background-color .35s ease}
+.fi:after{height:2px;background:var(--i);transform:scaleX(0);transform-origin:100% 50%;transition:transform .65s var(--E),background-color .35s ease}
+.frw:hover .fi:before{background:rgba(42,34,26,.85)}
+.frw:focus-within .fi:after{transform:scaleX(1);transform-origin:0 50%}
+.frw.good .fi:before{background:rgba(42,34,26,.75)}
+.frw.bad .fi:before,.frw.bad .fi:after{background:#9a3f2f}
+
+.fm input[type=text],.fm input[type=tel],.fm input[type=email],.fm select,.fm textarea{display:block;width:100%;-webkit-appearance:none;appearance:none;background-color:transparent;border:0;border-radius:3px 3px 0 0;box-shadow:none;padding:6px 6px;font-family:inherit;font-size:clamp(11px,.95vw,16px);line-height:1.7;letter-spacing:.03em;color:var(--i);caret-color:var(--i);outline:0;transition:background-color .4s ease}
+.frw:hover input,.frw:hover select,.frw:hover textarea{background-color:rgba(42,34,26,.03)}
+.fm input:focus,.fm select:focus,.fm textarea:focus{background-color:rgba(42,34,26,.05)}
+.fm :invalid{box-shadow:none}
+.fm ::placeholder{color:#a1957e;opacity:1;transition:color .35s ease}
+.fm :focus::placeholder{color:#cdc4b3}
+/* ブラウザの自動入力で欄が水色／黄色に塗られるのを防ぐ（紙の地を残す） */
+.fm input:-webkit-autofill{-webkit-text-fill-color:var(--i);transition:background-color 86400s 0s}
+
+/* 項目の選択。未選択のうちは記入例と同じ淡い色、選ぶと墨の色 */
+.fm select{padding-right:28px;cursor:pointer;text-overflow:ellipsis;background-image:url("data:image/svg+xml;charset=utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' fill='none' stroke='%236b5f4b' stroke-width='1.2'/%3E%3C/svg%3E");background-repeat:no-repeat;background-size:12px 8px;background-position:right 7px top 50%;transition:background-color .4s ease,background-position .45s var(--E)}
+.frw:hover select{background-position:right 7px top calc(50% + 2px)}
+.fm select:invalid{color:#a1957e}
+.fm select option{color:var(--i)}
+
+/* 内容欄。残りの高さをすべて使う（ただし下限あり） */
+.fm textarea{height:100%;min-height:clamp(50px,7vh,150px);resize:none;overflow:auto}
+
+.fhp{position:absolute!important;left:-9999px!important;width:1px!important;height:1px!important;opacity:0!important;pointer-events:none}
+
+/* 同意のチェック。本物の checkbox は透明にして上に残し、見た目は .fck が担当 */
+.fag{position:relative;left:var(--fcx);flex:0 0 auto;align-self:center;display:flex;align-items:center;justify-content:center;gap:clamp(10px,1vw,16px);margin-top:clamp(14px,3.7vh,44px);font-size:clamp(11px,.91vw,14.5px);letter-spacing:.08em;color:var(--im);cursor:pointer;user-select:none;transition:color .35s ease}
+.fag input{position:absolute;left:0;top:50%;width:clamp(15px,1.43vw,22px);height:clamp(15px,1.43vw,22px);margin:0;transform:translateY(-50%);opacity:0;cursor:pointer}
+.fck{position:relative;flex:0 0 auto;width:clamp(15px,1.43vw,22px);height:clamp(15px,1.43vw,22px);border:1px solid rgba(80,70,56,.72);border-radius:1.5px;background:rgba(255,255,255,.2);transition:border-color .35s ease,background-color .35s ease,transform .4s var(--E);pointer-events:none}
+.fck svg{position:absolute;inset:-2px;width:calc(100% + 4px);height:calc(100% + 4px);fill:none;stroke:var(--i);stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:1;stroke-dashoffset:1;transition:stroke-dashoffset .5s var(--E)}
+.fag:hover{color:var(--i)}
+.fag:hover .fck{border-color:var(--i);background:rgba(42,34,26,.05)}
+.fag:active .fck{transform:scale(.9)}
+.fag input:checked+.fck{border-color:var(--i)}
+.fag input:checked+.fck svg{stroke-dashoffset:0}
+.fag input:focus-visible+.fck{outline:2px solid rgba(58,48,37,.45);outline-offset:3px}
+.fag.bad .fck{border-color:#9a3f2f}
+/* TK_FORM.pp を設定したときだけ「プライバシーポリシー」がリンクになる */
+.fag a{color:inherit;text-decoration:none;border-bottom:1px solid rgba(58,50,40,.35);transition:border-color .35s ease}
+.fag a:hover{border-bottom-color:var(--i)}
+
+/* エラー文。出るときだけ静かに降りてくる */
+.fer{position:relative;left:var(--fcx);flex:0 0 auto;min-height:1.45em;margin-top:1px;text-align:center;font-size:clamp(10px,.82vw,13px);letter-spacing:.05em;line-height:1.45;color:#9a3f2f;opacity:0;transform:translateY(-3px);transition:opacity .35s ease,transform .45s var(--E)}
+.fer.on{opacity:1;transform:none}
+
+/* 送信ボタン。★v8：角R。必須がそろうと墨色が深まり、送信中は下辺に光が走る */
+.fsb{position:relative;left:var(--fcx);overflow:hidden;flex:0 0 auto;display:block;width:clamp(120px,10.7vw,188px);margin:0 auto;padding:clamp(6px,.54vw,9px) 0;background:#8f8b85;border:0;border-radius:clamp(4px,.36vw,7px);color:#fff;font-family:inherit;font-size:clamp(12px,1.14vw,18px);line-height:1;letter-spacing:.3em;text-indent:.3em;cursor:pointer;transition:background-color .5s ease,transform .45s var(--E),box-shadow .45s ease}
+.fsb span{position:relative;z-index:1}
+.fsb:hover{background:#7b7771;transform:translateY(-2px);box-shadow:0 9px 16px -11px rgba(42,34,26,.6)}
+.fsb:active{transform:translateY(1px);box-shadow:none;transition-duration:.12s}
+.fsb:focus-visible{outline:2px solid rgba(58,48,37,.5);outline-offset:3px}
+.fsb.rdy{background:#5b5142}
+.fsb.rdy:hover{background:#3a3025}
+.fsb[disabled]{cursor:default;pointer-events:none;transform:none;box-shadow:none}
+.fsb.busy:after{content:"";position:absolute;left:0;bottom:0;width:36%;height:2px;background:rgba(255,255,255,.8);animation:fsbRun 1.25s ease-in-out infinite}
+@keyframes fsbRun{from{transform:translateX(-100%)}to{transform:translateX(280%)}}
+/* 送信中は入力を受け付けない */
+.fR.sending .fw,.fR.sending .fag{pointer-events:none;opacity:.6;transition:opacity .3s ease}
+/* reCAPTCHA を使う場合の注記（JSがサイトキーを見つけたときだけ差し込む） */
+.frc{position:relative;left:var(--fcx);flex:0 0 auto;margin-top:6px;text-align:center;font-size:clamp(8px,.62vw,10px);line-height:1.6;letter-spacing:.02em;color:var(--if)}
+.frc a{color:inherit}
+.grecaptcha-badge{visibility:hidden}
+
+/* 送信完了 */
+.fok{display:none;flex-direction:column;align-items:center;justify-content:center;gap:14px;height:100%;text-align:center}
+.fR.done .fw,.fR.done .fag,.fR.done .fer,.fR.done .fsb,.fR.done .frc{display:none}
+.fR.done .fok{display:flex;animation:arIn .9s var(--E) both}
+.fok b{font-weight:400;font-size:clamp(15px,1.4vw,22px);letter-spacing:.18em;line-height:1.9;color:var(--i);outline:0}
+.fok p{font-size:clamp(10px,.85vw,13.5px);line-height:2.1;color:var(--im)}
+
+/* --- 右ページ：地図（嘉左衛門・平左衛門）★v8：フォームの下へ ---
+   iframe は既定では操作を受けず、クリックした時だけ操作できる＝地図の上でもホイールで本がめくれる。
+   読み込みはお問い合わせの見開きが近づいてから（JS）。 */
+.fmaps{position:relative;left:var(--fcx);flex:0 0 auto;display:flex;justify-content:center;align-items:flex-start;gap:clamp(16px,2.85vw,48px);margin-top:clamp(18px,7.5vh,90px)}
+.fmap{flex:0 0 auto;width:var(--fmapW,min(46%,21vh));display:flex;flex-direction:column;align-items:center;color:inherit}
+.fmapc{position:relative;width:100%;aspect-ratio:3/2;overflow:hidden;background:#e7e5e0;border:2px solid #fbfaf6;box-shadow:0 0 0 1px rgba(58,50,40,.1);cursor:pointer;transition:box-shadow .45s ease}
+.fmapc iframe{position:absolute;inset:0;width:100%;height:100%;border:0;display:block;z-index:1;pointer-events:none;filter:grayscale(1) contrast(.9) brightness(1.03)}
+.fmapc.on iframe{pointer-events:auto}
+.fmapc:after{content:"クリックで操作";position:absolute;z-index:2;right:0;top:0;padding:3px 7px;font-size:clamp(8px,.62vw,10px);letter-spacing:.06em;color:#fff;background:rgba(42,34,26,.6);transition:opacity .35s ease,background-color .35s ease;pointer-events:none}
+.fmapc:hover{box-shadow:0 0 0 1px rgba(58,50,40,.38),0 10px 20px -14px rgba(42,34,26,.45)}
+.fmapc:hover:after{background:rgba(20,16,9,.82)}
+.fmapc.on:after{opacity:0}
+.fcap{writing-mode:horizontal-tb;display:flex;flex-direction:column;align-items:center;text-align:center;margin-top:clamp(5px,1.05vh,10px)}
+.fcap b{display:block;font-family:"Karla","Shippori Mincho","Noto Serif JP",serif;font-weight:300;font-size:clamp(9px,.8vw,12.5px);letter-spacing:.1em;color:var(--il);line-height:1.7}
+.fcap em{display:block;font-style:normal;font-size:clamp(12px,min(1.07vw,2.1vh),17px);letter-spacing:.12em;color:var(--i);line-height:1.6}
+/* ★v8：住所そのものを Google マップへのリンクに（設計どおり3行に収めるため「大きな地図で見る」の行は廃止）。
+   ホバーで下線が左から引かれ、右肩の矢印が少し動く */
+.fcap a{position:relative;display:inline-block;font-size:clamp(9px,.8vw,12.5px);letter-spacing:.06em;line-height:1.75;color:var(--im);text-decoration:none;background:linear-gradient(currentColor,currentColor) 0 100%/0 1px no-repeat;transition:background-size .55s var(--E),color .35s ease}
+.fcap a:after{content:"";display:inline-block;width:.62em;height:.62em;margin-left:.32em;vertical-align:.08em;opacity:.55;background:url("data:image/svg+xml;charset=utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 10'%3E%3Cpath d='M3 1h6v6M9 1 1 9' fill='none' stroke='%233a3025' stroke-width='1.3'/%3E%3C/svg%3E") center/contain no-repeat;transition:transform .45s var(--E),opacity .35s ease}
+.fcap a:hover{color:var(--i);background-size:100% 1px}
+.fcap a:hover:after{opacity:1;transform:translate(1px,-1px)}
+
+/* --- 左ページ：奥付（背表紙側） --- */
+.fL{--fgut:clamp(26px,3.9vw,64px);position:absolute;inset:0;overflow:hidden;padding-left:var(--navW)}
+.fLin{position:relative;width:100%;height:100%}
+/* ★v8：タイトルロゴ → ロゴマーク の組。奥付の上の空きの中で上下中央 */
+.fbr{position:absolute;left:0;right:var(--fgut);top:5%;bottom:21%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:clamp(8px,3.4vh,40px);pointer-events:none}
+.fbr img{display:block;flex:0 0 auto;min-height:0;width:auto;max-width:100%;object-fit:contain}
+/* タイトルは字の重心が画像の中心より左にあるので、少しだけ右へ寄せてマークの中心にそろえる */
+.fbr .flt{height:var(--fltH,35%);translate:3.5% 0}
+.fbr .fmk{height:var(--fmkH,41%);max-width:78%}
+
+.fft{position:absolute;left:8%;right:var(--fgut);top:82.4%}
+.fft p{font-size:clamp(11px,.93vw,15px);letter-spacing:.08em;line-height:1.95;color:var(--i)}
+.fgr{display:flex;align-items:flex-start;gap:12px;margin-top:clamp(10px,1.7vh,20px);max-width:min(76%,100% - 9em)}
+.fgr img{width:clamp(30px,2.6vw,42px);flex-shrink:0;display:block}
+.fgrl{width:clamp(30px,2.6vw,42px);height:clamp(30px,2.6vw,42px);flex-shrink:0;display:flex;align-items:center;justify-content:center}
+.fgrl img{width:100%;height:100%;object-fit:contain;display:block}
+.fgr p{font-size:clamp(9px,.78vw,12.5px);line-height:1.85;color:var(--im);letter-spacing:.04em}
+/* ★v8：SNSアイコンをノドから離す（v7 は右端 1.3%＝ノドに接していた） */
+.fsns{position:absolute;right:var(--fgut);bottom:5.9%;display:flex;gap:14px}
+.fsns a{display:flex;width:clamp(22px,1.9vw,30px);height:clamp(22px,1.9vw,30px);color:var(--i);transition:transform .45s var(--E),opacity .35s}
+.fsns a:hover{transform:translateY(-3px);opacity:.7}
+.fsns svg{width:100%;height:100%;display:block}
+
+/* ============================================================
+   10. 小さめの画面（PCレイアウトのまま縮める）
+   ============================================================ */
+@media(max-width:1100px){
+.m{--navW:clamp(58px,6vw,82px)}
+.ibs{gap:clamp(11px,1.5vw,22px)}
+.fw{column-gap:12px}
+.fmaps{gap:14px}
+.fcol{left:15.5%;right:15.6%}
+}
+/* 背の低い画面（ノートPCでブラウザのバーが多いときなど）。地図の下の1行を省いて高さを稼ぐ */
+@media(min-width:769px) and (max-height:700px){
+.fcap b{display:none}
+.fmaps{margin-top:clamp(10px,3vh,24px)}
+}
+@media(max-width:768px){
+.m{--navW:56px;--logoW:76vw;--titleW:34%;--titleX:48%;--titleY:4%;--introFS:12px;--introX:62%;--introY:22%}
+.ni{font-size:13px;letter-spacing:.12em;padding-right:16px}
+.igg{grid-template-columns:repeat(2,1fr);grid-template-rows:repeat(3,1fr);gap:3.5% 3.5%}
+.igg .igc:nth-child(n+7){display:none}
+.tt{font-size:16px}
+.ts,.tg{font-size:8px}
+.fw{grid-template-columns:1fr;row-gap:6px}
+.fl{justify-self:start}
+}
+
+/* ============================================================
+   ■ v4 変更点まとめ（v3 → v4）
+   ------------------------------------------------------------
+   全体 …… 文字色を濃く（変数 --im/--il/--if を埋め込み側で変更）
+            左ナビを白背景＋文字拡大（--navFS）
+            #p0〜#p8 の重なり順をCSSで先に確定（チラ見え対策）
+   00 …… タイトルロゴ 22%→34%相当に拡大・イラスト寄りへ移動
+            コピー文を内側へ寄せ、文字サイズ13→16.5px、行間を実測値へ
+   01 …… 区切り線・見出し・説明・矢印の位置をすべて実測値へ
+   02 …… 見出し拡大／カード縦長化／写真6:5／キャプション4行（右5行）
+   03-08 … 本文15px・行間2.13、見出し33.5px、リード23.5px、
+            情報ブロック13px・行間2.0、画像座標を実測値へ
+   09 …… タイトルとフォームの重なり解消、内容欄が縦に伸びて余白を解消
+            左ページに .fLin を新設（左ナビに文字が潜る不具合の解消）
+            嘉左衛門・平左衛門を Googleマップ埋め込みへ
+   ============================================================ */
+
+/* ============================================================
+   11. ページ間の遷移（v5 で新設）
+   ------------------------------------------------------------
+   考え方：動かすのは「紙の上の中身」だけ。
+   背景・左ナビ・右下ボタン・ノドの線・写真の枠は一切動かさない。
+   出発ページと到着ページで額縁が同じ位置にあるので、
+   途中を単色で覆わなくても継ぎ目が見えません。
+
+     .lv  … 別ページへ出ていく途中（中身が沈みながら消える）
+     .ar  … 別ページから着いた直後（中身が浮かび上がる）
+     .dl  … #s3 のように直接その見開きに来たときの待ち受け
+            （エンジンが紙を並べ終えるまで本ごと伏せる）
+
+   ★ここから下のセレクタはすべて .lv / .ar / .dl のいずれかが
+     付いているときだけ効きます。素の状態の表示には影響しません。
+   速度は埋め込み側の --lvD（出ていく）／--arD（着く）で調整できます。
+   ============================================================ */
+
+@keyframes lvOut{from{opacity:1;transform:none}to{opacity:0;transform:translateY(12px)}}
+@keyframes arIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+
+/* 「中身」の根＝各ページの本文コンテナと、見開きをまたぐ画像の中身。
+   .xs は枠なので動かさず、その中の >i（画像）だけを動かす。 */
+.m.lv .pgIn,.m.lv .xs>i,.m.lv .hr,.m.lv .tc,.m.lv .igl,.m.lv .igr,.m.lv .fR,.m.lv .fLin{animation:lvOut var(--lvD,.19s) cubic-bezier(.4,0,.62,1) forwards}
+.m.ar .pgIn,.m.ar .xs>i,.m.ar .hr,.m.ar .tc,.m.ar .igl,.m.ar .igr,.m.ar .fR,.m.ar .fLin{animation:arIn var(--arD,.5s) var(--E) both}
+
+/* 送り出している間は二度押しを受け付けない */
+.m.lv{pointer-events:none}
+
+/* 別ページへ出るリンク（「詳細を見る」）。押した瞬間だけ沈む */
+.ibl[data-leave]:active{transform:translateY(2px)}
+
+/* ★到着待ち：紙の重なり順と回転が確定するまで本ごと伏せる。
+   背景・左ナビ・右下ボタンは伏せない＝遷移元と同じ絵のまま待つ。 */
+.m.dl.pre .bk{visibility:hidden}
+.m.dlnav.pre .nv{transform:translateX(0);opacity:1;visibility:visible}
+.m.dlcn.pre .cn{transform:translateX(0);opacity:1;visibility:visible}
+
+/* 動きを減らす設定の利用者には演出を出さない（前庭障害への配慮） */
+@media(prefers-reduced-motion:reduce){
+.fl:before,.fi:after,.fck svg,.fer,.fsb,.fm select{transition:none}
+.fsb.busy:after,.fR.done .fok{animation:none}
+.m.ar .pgIn,.m.ar .xs>i,.m.ar .hr,.m.ar .tc,.m.ar .igl,.m.ar .igr,.m.ar .fR,.m.ar .fLin{animation:none}
+.m.lv .pgIn,.m.lv .xs>i,.m.lv .hr,.m.lv .tc,.m.lv .igl,.m.lv .igr,.m.lv .fR,.m.lv .fLin{animation:none;opacity:0}
+}
+
+/* ============================================================
+   12. とまる詳細ページ（v6 で stay.v5.css から統合）
+   ------------------------------------------------------------
+   ここから下は .m.solo が付いたページ＝詳細ページ専用です。
+   トップページには .solo も .kz* も存在しないので影響しません。
+   座標は 1400x868 の設計データを画素実測して算出しています。
+   ============================================================ */
+/* ============================================================
+   12-0. 詳細ページの土台
+   ------------------------------------------------------------
+   トップと違い、めくる紙（.pp / .pf）がありません。
+   左右のページは静的な .cl / .cr にそのまま置いています。
+   ============================================================ */
+
+/* 埋め込み側の起動スクリプトが「このCSSが届いたか」を判定する目印。
+   届く前に中身を出すと位置が崩れて見えるため、これを見て出し始めます */
+.m.solo{--kzready:1}
+
+.m.solo .ni,.m.solo .cb,.m.solo .kzln{text-decoration:none}
+
+/* ノドの影。トップの .pf:before / .pf.b:before と同じ見え方にする */
+.m.solo .cl:before,.m.solo .cr:before{content:"";position:absolute;top:0;bottom:0;width:14px;z-index:30;pointer-events:none}
+.m.solo .cl:before{right:0;background:linear-gradient(270deg,rgba(42,34,26,.04),transparent)}
+.m.solo .cr:before{left:0;background:linear-gradient(90deg,rgba(42,34,26,.04),transparent)}
+
+/* このページ独自の縦書き要素 */
+.kzh,.kzg,.kzln,.kznm{writing-mode:vertical-rl;text-orientation:mixed}
+.kznm,.kzh{font-family:"ab-yoshienoryokan-b","Shippori Mincho","Noto Serif JP",serif;font-weight:400;font-style:normal}
+
+/* ============================================================
+   12-1. 詳細ページ 左：間取り図
+   ============================================================ */
+.kzfp{position:absolute;overflow:hidden;z-index:2}
+.kzfp.f2{left:17.38%;top:12.10%;width:44.87%;height:17.86%}
+.kzfp.f1{left:13.41%;top:37.21%;width:54.30%;height:19.82%}
+.kzfp img{width:100%;height:100%;object-fit:contain;display:block}
+
+/* 「2F」「1F」は画像に焼き込まず、HTMLの文字として置いています。
+   差し替え用の間取り図画像にはラベルを含めないでください */
+.kzfl{position:absolute;z-index:2;writing-mode:horizontal-tb;
+  font-size:var(--kzflFS,clamp(14px,min(1.57vw,3vh),25px));line-height:1;letter-spacing:.05em;color:var(--i)}
+.kzfl.f2{left:13.25%;top:31.51%}
+.kzfl.f1{left:13.91%;top:58.17%}
+
+/* ============================================================
+   12-2. 詳細ページ 左：情報欄
+   ------------------------------------------------------------
+   .kzi = 置き場（右づめ・右から左へ並ぶ）
+   .kzh = 「ゲストハウス」の見出し
+   .kzg = 1グループ。右から 見出し(b) → 中身(span)
+   .kzln= 「宿泊プランを見る」（下端そろえ・右側に罫線）
+   ============================================================ */
+.kzi{position:absolute;left:9.27%;right:2.15%;top:68.20%;height:25.81%;z-index:5;
+  display:flex;flex-direction:row-reverse;align-items:flex-start;justify-content:flex-start;
+  gap:var(--kziGap,clamp(5px,.685vw,13px))}
+.kzh{flex:0 0 auto;font-size:var(--kzhFS,clamp(14px,min(1.43vw,2.75vh),23px));
+  letter-spacing:.12em;line-height:1.2;color:var(--i);white-space:nowrap}
+/* ★縦書き（vertical-rl）の中では flex-direction:row が「縦方向」に走ります。
+   見出しと中身を横に並べたいので column を使います（縦書きでは右→左になる） */
+.kzg{flex:0 0 auto;display:flex;flex-direction:column;align-items:stretch;gap:0;height:100%;
+  font-size:var(--kziFS,clamp(11px,min(1.14vw,2.2vh),18px));line-height:1.5;letter-spacing:0;color:var(--im)}
+/* ★字間を入れると1行が桁の高さ（223px）に収まらず、桁数が設計より増えます。
+   設計の桁数（客室4／設備5／住所2／アクセス7）はこの letter-spacing:0 が前提です */
+.kzg b{flex:0 0 auto;font-weight:400;color:var(--i);white-space:nowrap}
+.kzg span{flex:0 1 auto}
+.kzln{flex:0 0 auto;align-self:flex-end;
+  font-size:var(--kzlnFS,clamp(11px,min(1.14vw,2.2vh),18px));letter-spacing:.06em;line-height:1.6;
+  color:var(--im);white-space:nowrap;cursor:pointer;
+  padding-right:5px;border-right:1px solid rgba(58,50,40,.5);
+  transition:opacity .35s,transform .35s var(--E)}
+.kzln:hover{opacity:.6}
+.kzln:active{transform:translateY(2px)}
+
+/* ============================================================
+   12-3. 詳細ページ 右：紋・題字・英字
+   ------------------------------------------------------------
+   本文は book.v5.css の .bd.b をそのまま使うので指定なし
+   ============================================================ */
+.kzem{position:absolute;right:12.71%;top:29.61%;width:5.86%;height:4.49%;z-index:5}
+.kzem img{width:100%;height:100%;object-fit:contain;display:block}
+.kznm{position:absolute;right:12.71%;top:35.60%;z-index:5;margin:0;
+  font-size:var(--kznFS,clamp(24px,min(2.81vw,5.4vh),47px));line-height:1;letter-spacing:0;
+  color:var(--i);white-space:nowrap}
+.kzR .ibk{position:absolute;right:9.29%;top:37.90%;z-index:5;letter-spacing:.21em}
+
+/* ============================================================
+   12-4. 素材待ちのプレースホルダー
+   ------------------------------------------------------------
+   実素材が届いたら tmpb を外して <img> を入れるだけです
+   ============================================================ */
+.tmpb{background:rgba(42,34,26,.045);border:1px dashed rgba(58,50,40,.32);
+  display:flex;align-items:center;justify-content:center}
+.tmpb:after{content:attr(data-lbl);writing-mode:horizontal-tb;
+  font-size:clamp(8px,.75vw,12px);letter-spacing:.14em;line-height:1.9;
+  color:var(--il);text-align:center;padding:0 8%}
+
+/* ============================================================
+   12-5. 小さめの画面
+   ============================================================ */
+@media(max-width:1100px){
+.kzi{gap:clamp(7px,.95vw,14px)}
+.kzg{gap:.35em}
+}
+
+/* スマホ幅では book.v5.css により .m ごと非表示になります。
+   真っ白にならないよう、ひとことだけ出しておきます。
+   スマホ版（Phase 4）を作ったらこのブロックごと削除してください */
+.kzsp{display:none}
+@media(max-width:768px){
+.kzsp{display:flex;align-items:center;justify-content:center;
+  position:fixed;inset:0;z-index:9000;padding:12vw;
+  background:#faf6ef;color:#3a3025;text-align:center;line-height:2.1;
+  font-family:"Shippori Mincho","Noto Serif JP",serif;font-size:15px;letter-spacing:.06em}
+}
