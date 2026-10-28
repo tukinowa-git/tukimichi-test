@@ -1,0 +1,382 @@
+/* book-sp.v13.0.css — 月みちて、山となる。 スマホ版（正式版）見た目
+   2026-10-27 / タグ v13.0.0。デザイン「SP横長_1026」にもとづく正式版の1つ目
+   （HTML はトップ・嘉左衛門それぞれの「スマホ版の枠」、動きは book-sp.v13.0.js）
+
+   ■ 読み込み
+     各ページのスマホ版の枠が <link media="(max-width:768px)"> で読みます。
+     768px以下でだけ効くので、PC版の見た目には一切かかりません。
+     768 の値は5か所そろえること：book-sp.v13.0.js の NARROW、スマホ版の枠の <link media> と @media、
+     PC版の枠の @media、book.v12.2.js の NARROW
+
+   ■ 寸法の単位
+     デザインの1画面（375×700pt）を、画面の幅・高さの小さい方に合わせて拡大・縮小します。
+     下の calc(var(--u)*16) は「デザインの16pt」の意味です（--u は JS が画面に合わせて入れる）。
+
+   ■ 文章について
+     文章はPC版の枠にある1組を、スマホ幅のときだけ JS がここへ移します（PC幅に戻すと元へ戻す）。
+     PC版の CSS（book.v12.2.css）は画面幅に関係なく効いているので、移した要素には
+     PC版の指定（位置・字の大きさ・行送りなど）が残ります。ここではそれを .tmm 付きで打ち消してから組みます。
+     PC版のクラス名（.kw .lead .bd .ib など）に当てている指定は、すべて .tmm の中だけに効きます。
+
+   ■ 紙の地（--bg）は、PC版の枠が読み込んでいる bg-paper.webp と同じファイルを JS が渡します（二重に読まない）
+   ■ 色・書体はPC版と同じ（--i 見出し／--im 本文／--il 添え字／--if 淡い）
+     書体：Shippori Mincho（本文・見出し）、ab-yoshienoryokan-b（テーマ名・ページ名）、Karla（swipe）
+
+   ■ 目次
+     0 土台 ／ 1 ヘッダー・メニュー・swipe ／ 2 ページの重なりと動き ／ 3 ローディング・ファーストビュー
+     4 ものがたりのはじまり ／ 5 日々のあれこれ ／ 6 目次 ／ 7 テーマの帯（絵巻）
+     8 帯ごとの調整 ／ 9 嘉左衛門 ／ 10 お問い合わせ ／ 11 プライバシーポリシーの小窓 ／ 12 奥付
+*/
+
+/* ===================== 0. 土台 ===================== */
+.tmm{--tmmok:1;--u:min(calc(100vw/375),calc(100vh/700));--k:1;--ox:0px;--oy:0px;
+  --i:#141009;--im:#3a3025;--il:#5b5142;--if:#8a7f6c;--E:cubic-bezier(.16,1,.3,1);
+  --F:"Shippori Mincho","Noto Serif JP",serif;--Y:"ab-yoshienoryokan-b","Shippori Mincho","Noto Serif JP",serif;
+  position:fixed;inset:0;z-index:9000;overflow:hidden;
+  background:var(--bg) center/cover no-repeat #faf6ef;color:var(--i);
+  font-family:var(--F);font-weight:400;font-size:calc(var(--u)*16);line-height:1.5;
+  -webkit-text-size-adjust:100%;text-size-adjust:100%;-webkit-tap-highlight-color:transparent;
+  touch-action:none;overscroll-behavior:none;-webkit-font-smoothing:antialiased}
+.tmm *,.tmm *:before,.tmm *:after{box-sizing:border-box;margin:0;padding:0}
+.tmm img{-webkit-touch-callout:none;-webkit-user-drag:none;user-select:none;max-width:none}
+/* スマホ版の枠のボタンだけを素の状態に（PC版から移した送信ボタン .fsb などには触れない） */
+.tmm-mb,.tmm-sw,.tmm-mi{font:inherit;color:inherit;background:none;border:0;border-radius:0;cursor:pointer;-webkit-appearance:none;appearance:none;text-align:inherit}
+.tmm a{color:inherit;text-decoration:none}
+.tmm :focus{outline:0}
+.tmm :focus-visible{outline:2px solid rgba(58,48,37,.45);outline-offset:3px}
+html.tmmL,html.tmmL body{overflow:hidden!important;height:100%!important;overscroll-behavior:none}
+/* 嘉左衛門ページの「このページはPC表示のみの対応です」（PC版の枠の .kzsp）はスマホでは出さない */
+.kzsp{display:none!important}
+/* 読み込みの幕（HTML に直書き。JS が支度を終えると消える） */
+.tmm-sh{pointer-events:none}
+.tmm-sh.off{opacity:0}
+
+/* ===================== 1. ヘッダー・メニュー・swipe ===================== */
+.tmm-hd{position:absolute;left:var(--ox);right:var(--ox);top:0;height:calc(var(--u)*60);z-index:60;pointer-events:none;color:var(--i);transition:color .5s ease}
+.tmm-hd>*{pointer-events:auto;transition:opacity .6s ease,visibility .6s ease}
+.tmm[data-h="0"] .tmm-hd>*{opacity:0;visibility:hidden}
+.tmm[data-h="1"] .tmm-ic,.tmm[data-h="1"] .tmm-pn{opacity:0;visibility:hidden}
+/* メニュー（三本線 → ×） */
+.tmm-mb{position:absolute;left:calc(var(--u)*3);top:calc(var(--u)*10.5);width:calc(var(--u)*44);height:calc(var(--u)*44);min-width:40px;min-height:40px}
+.tmm-mb i,.tmm-mb i:before,.tmm-mb i:after{position:absolute;left:0;width:calc(var(--u)*18);height:1px;background:currentColor;transition:transform .55s var(--E),opacity .35s ease}
+.tmm-mb i{left:calc(var(--u)*13);top:calc(var(--u)*22);margin-top:-.5px}
+.tmm-mb i:before,.tmm-mb i:after{content:""}
+.tmm-mb i:before{transform:translateY(calc(var(--u)*-6.14))}
+.tmm-mb i:after{transform:translateY(calc(var(--u)*6.14))}
+.tmm.tmm-mo .tmm-mb i{background:transparent}
+.tmm.tmm-mo .tmm-mb i:before{background:currentColor;transform:rotate(33.69deg) scaleX(1.2017)}
+.tmm.tmm-mo .tmm-mb i:after{transform:rotate(-33.69deg) scaleX(1.2017)}
+/* ページ名（帯にいるときだけ） */
+.tmm-pn{position:absolute;left:calc(var(--u)*63.3);top:calc(var(--u)*12.6);height:calc(var(--u)*40);overflow:hidden;font-family:var(--Y);font-weight:400;font-size:calc(var(--u)*28);line-height:calc(var(--u)*40);letter-spacing:-.1em;white-space:nowrap;color:var(--i)}
+.tmm-pn span{display:block}
+.tmm.tmm-mo .tmm-pn{opacity:0;visibility:hidden}
+/* メール・ホーム */
+.tmm-ic{position:absolute;top:calc(var(--u)*10.5);width:calc(var(--u)*44);height:calc(var(--u)*44);min-width:40px;min-height:40px;display:flex;align-items:center;justify-content:center}
+.tmm-ic svg{display:block;fill:none;stroke:currentColor;stroke-linejoin:round;overflow:visible}
+.tmm-hc{right:calc(var(--u)*59.8)}
+.tmm-hc svg{width:calc(var(--u)*22.24);height:calc(var(--u)*15.06);stroke-width:.82}
+.tmm-hh{right:calc(var(--u)*13.7);top:calc(var(--u)*9.4)}
+.tmm-hh svg{width:calc(var(--u)*24.19);height:calc(var(--u)*20.96);stroke-width:1}
+.tmm.tmm-mo .tmm-hd{color:#fff}
+.tmm-mb:active,.tmm-ic:active{opacity:.55}
+
+/* メニュー（目次の全画面） */
+.tmm-mn{position:absolute;inset:0;z-index:50;background:#8a887e;color:#fff;opacity:0;visibility:hidden;transition:opacity .5s ease,visibility .5s ease}
+.tmm.tmm-mo .tmm-mn{opacity:1;visibility:visible}
+.tmm-ml{position:absolute;right:calc(var(--ox) + calc(var(--u)*45.8));top:calc(var(--oy) + calc(var(--u)*122.4));writing-mode:vertical-rl;font-size:calc(var(--u)*15);letter-spacing:.41em;line-height:1}
+.tmm-mu{list-style:none;position:absolute;left:var(--ox);top:calc(var(--oy) + calc(var(--u)*181.28));width:calc(var(--u)*375);height:calc(var(--u)*383.68);display:flex;flex-direction:row-reverse;padding-right:calc(var(--u)*26.5)}
+.tmm-mu li{list-style:none;position:relative;flex:0 0 calc(var(--u)*53.67);height:100%}
+.tmm-mu li+li:after{content:"";position:absolute;right:0;top:0;bottom:0;width:1px;background:rgba(214,211,211,.5)}
+.tmm-mi{position:relative;display:block;width:100%;height:100%;color:#fff;text-align:left}
+.tmm-mi b{position:absolute;left:50%;top:calc(var(--u)*33.3);transform:translateX(-50%);writing-mode:vertical-rl;font-family:var(--Y);font-weight:400;font-size:calc(var(--u)*32);letter-spacing:-.1em;line-height:1;white-space:nowrap}
+.tmm-mx{position:absolute;left:50%;top:calc(var(--u)*121.7);transform:translateX(-50%);display:flex;flex-direction:row-reverse;writing-mode:horizontal-tb}
+.tmm-mx span{display:block;writing-mode:vertical-rl;font-size:calc(var(--u)*12);letter-spacing:.03em;line-height:calc(var(--u)*16);white-space:nowrap;color:#d6d3d3}
+.tmm-mi i{position:absolute;left:50%;top:calc(var(--u)*364.4);width:calc(var(--u)*8);height:calc(var(--u)*8);margin-left:calc(var(--u)*-4);border-right:1.1px solid currentColor;border-bottom:1.1px solid currentColor;transform:rotate(45deg)}
+.tmm-mi:active b,.tmm-mi.on b{opacity:.7}
+.tmm-mn li{opacity:0;transform:translate3d(0,calc(var(--u)*10),0);transition:opacity .6s ease,transform .8s var(--E)}
+.tmm.tmm-mo .tmm-mn li{opacity:1;transform:none}
+.tmm.tmm-mo .tmm-mn li:nth-child(2){transition-delay:.05s}
+.tmm.tmm-mo .tmm-mn li:nth-child(3){transition-delay:.1s}
+.tmm.tmm-mo .tmm-mn li:nth-child(4){transition-delay:.15s}
+.tmm.tmm-mo .tmm-mn li:nth-child(5){transition-delay:.2s}
+.tmm.tmm-mo .tmm-mn li:nth-child(6){transition-delay:.25s}
+
+/* swipe（左下）。点がゆっくり上へのぼる */
+.tmm-sw{position:absolute;left:calc(var(--ox) + calc(var(--u)*17));bottom:calc(var(--u)*12);z-index:55;display:flex;align-items:center;gap:calc(var(--u)*9.7);padding:calc(var(--u)*6);font-family:"Karla","Shippori Mincho",sans-serif;font-weight:400;font-size:calc(var(--u)*14);letter-spacing:.04em;line-height:1;color:var(--il);transition:opacity .6s ease,visibility .6s ease}
+.tmm-sw i{position:relative;display:block;width:calc(var(--u)*5.2);height:calc(var(--u)*5.2);border-radius:50%;background:var(--il);margin-top:calc(var(--u)*1.5);animation:tmmSw 2.6s ease-in-out infinite}
+@keyframes tmmSw{0%,100%{transform:translateY(0);opacity:1}45%{transform:translateY(calc(var(--u)*-5));opacity:.35}70%{transform:translateY(0);opacity:1}}
+.tmm[data-sw="0"] .tmm-sw,.tmm.tmm-mo .tmm-sw{opacity:0;visibility:hidden}
+
+/* ===================== 2. ページの重なりと動き ===================== */
+.tmm-bk{position:absolute;inset:0;overflow:hidden}
+.tmm.tmm-lv .tmm-bk,.tmm.tmm-lv .tmm-hd,.tmm.tmm-lv .tmm-sw{opacity:0;transition:opacity .16s ease}
+.tmm-pg{position:absolute;inset:0;overflow:hidden;visibility:hidden;background:var(--bg) center/cover no-repeat #faf6ef}
+.tmm-pg.on{visibility:visible}
+/* 紙を一枚重ねるときの、紙の端の影（JS が濃さを動かす） */
+.tmm-ed{position:absolute;left:0;right:0;top:0;height:34%;z-index:45;pointer-events:none;opacity:0;
+  background:linear-gradient(180deg,rgba(42,34,26,.13),rgba(42,34,26,.045) 38%,rgba(42,34,26,0))}
+/* 375×700 の舞台（1画面のページ）。画面の中央に置く */
+.tmm-st{position:absolute;left:var(--ox);top:var(--oy);width:calc(var(--u)*375);height:calc(var(--u)*700)}
+.tmm-s{display:block}
+/* 文字が墨のようににじみ出る（.in が付くと出る） */
+.tmm-k{opacity:0;transform:translate3d(0,calc(var(--u)*8),0);filter:blur(2px);transition:opacity .95s ease,transform 1.25s var(--E),filter 1.1s ease}
+.tmm-k.in{opacity:1;transform:none;filter:none}
+.tmm-k.tmm-p{filter:none;transform:scale(1.012);transition:opacity 1.05s ease,transform 1.6s var(--E)}
+.tmm-k.tmm-p.in{transform:none}
+.tmm-now .tmm-k,.tmm-now.tmm-k{transition:none!important}
+@media(prefers-reduced-motion:reduce){
+.tmm-k,.tmm-k.tmm-p{transform:none;filter:none;transition:opacity .35s ease}
+.tmm-sw i{animation:none}
+}
+@keyframes tmmInk{from{opacity:0;filter:blur(3px);transform:translate3d(0,calc(var(--u)*8),0)}to{opacity:1;filter:none;transform:none}}
+
+/* ===================== 3. ローディング・ファーストビュー ===================== */
+.tmm-ld .tmm-s[data-s="ld"]{position:absolute;right:calc(var(--u)*139.5);top:calc(var(--u)*298.5)}
+.tmm .tmm-ld .itx{position:static;font-size:calc(var(--u)*16);letter-spacing:.2em;line-height:calc(var(--u)*32);color:var(--i);writing-mode:vertical-rl;white-space:nowrap}
+.tmm .tmm-ld .itx span{display:block;margin:0!important;opacity:0}
+.tmm .tmm-ld.tmm-go .itx span{animation:tmmInk 1.7s var(--E) both}
+.tmm .tmm-ld.tmm-go .itx span:nth-child(2){animation-delay:.4s}
+.tmm .tmm-ld.tmm-go .itx span:nth-child(3){animation-delay:.8s}
+.tmm-ld .tmm-k{opacity:1;transform:none;filter:none}
+.tmm-fvt{position:absolute;left:calc(var(--u)*91.8);top:calc(var(--u)*59.6);width:calc(var(--u)*213.1);height:calc(var(--u)*322.2)}
+.tmm .tmm-fvt .itl{position:absolute;left:0;top:0;bottom:auto;width:100%;height:100%;object-fit:contain;transform:rotate(-1deg)!important;opacity:1!important;filter:none!important;z-index:auto}
+.tmm-fvm{position:absolute;left:calc(var(--u)*-25.38);top:calc(var(--u)*305.25);width:calc(var(--u)*433.32);height:calc(var(--u)*299)}
+.tmm .tmm-fvm img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;opacity:1!important;transform:none!important;filter:none!important;will-change:auto}
+.tmm-fv .tmm-fvm.tmm-k{transition-duration:1.6s,2.2s,1.8s}
+
+/* ===================== 4. ものがたりのはじまり ===================== */
+.tmm-inh{position:absolute;right:calc(var(--u)*61.8);top:calc(var(--u)*180.5)}
+.tmm .tmm-inh .hh{position:static;font-size:calc(var(--u)*24);letter-spacing:.2em;line-height:calc(var(--u)*38.16);color:var(--i);white-space:nowrap;writing-mode:vertical-rl}
+.tmm .tmm-inh .hh span{display:block}
+.tmm-inb{position:absolute;right:calc(var(--u)*164.7);top:calc(var(--u)*173)}
+.tmm .tmm-inb .hb{position:static;height:auto;font-size:calc(var(--u)*16);letter-spacing:.05em;line-height:calc(var(--u)*32);color:var(--im);white-space:nowrap;writing-mode:vertical-rl}
+.tmm-ina{position:absolute;left:calc(var(--u)*81.5);top:calc(var(--u)*580.7);width:calc(var(--u)*192.6);height:calc(var(--u)*46.2)}
+.tmm .tmm-ina .ab{position:relative;left:auto;right:auto;bottom:auto;display:block;width:100%;height:100%;aspect-ratio:auto;background:none;transform:none;filter:none;transition:opacity .3s ease}
+.tmm .tmm-ina .ab:before{content:"";position:absolute;left:50%;top:50%;width:calc(var(--u)*46.2);height:calc(var(--u)*192.6);background:url("img/btn-frame.svg") center/100% 100% no-repeat;transform:translate(-50%,-50%) rotate(-90deg)}
+.tmm .tmm-ina .af{display:none}
+.tmm .tmm-ina .at{position:absolute;left:calc(var(--u)*26.7);right:0;top:0;bottom:0;writing-mode:horizontal-tb;display:flex;align-items:center;justify-content:center;padding-left:calc(var(--u)*4.4);font-size:calc(var(--u)*16);letter-spacing:0;line-height:1;color:var(--i);transform:none}
+.tmm .tmm-ina .ab:active{opacity:.6}
+
+/* ===================== 5. 日々のあれこれ ===================== */
+.tmm-igh{position:absolute;left:0;right:0;top:calc(var(--u)*82.8);text-align:center}
+.tmm .tmm-igh .igt{position:static;display:inline-block;writing-mode:horizontal-tb;font-size:calc(var(--u)*26.2);letter-spacing:-.1em;line-height:1.25;color:var(--i);white-space:nowrap}
+.tmm .tmm-igh .igt span{display:inline}
+.tmm-igg{position:absolute;left:calc(var(--u)*15.9);top:calc(var(--u)*159.4);width:calc(var(--u)*341.8);display:grid;grid-template-columns:calc(var(--u)*166) calc(var(--u)*166);grid-auto-rows:calc(var(--u)*219.6);column-gap:calc(var(--u)*9.8)}
+.tmm-igc{display:block;min-width:0;overflow:hidden;color:inherit}
+.tmm-igc img{display:block;width:calc(var(--u)*166);height:calc(var(--u)*130);object-fit:cover;background:#ece7dc}
+.tmm-igd{display:block;margin-top:calc(var(--u)*7);font-size:calc(var(--u)*12);letter-spacing:.1em;line-height:1.3;color:var(--il)}
+.tmm-igp{margin-top:calc(var(--u)*2.4);font-size:calc(var(--u)*12);line-height:calc(var(--u)*19);letter-spacing:.02em;color:var(--im);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;word-break:break-all}
+.tmm-igc:active{opacity:.7}
+.tmm-igm{position:absolute;left:0;right:0;top:calc(var(--u)*598);height:calc(var(--u)*25);display:flex;align-items:center;justify-content:center;gap:calc(var(--u)*8.8);color:var(--i);font-size:calc(var(--u)*16);letter-spacing:.06em;line-height:1}
+.tmm-igm svg{display:block;width:calc(var(--u)*18.2);height:calc(var(--u)*18.2)}
+.tmm-igm:active{opacity:.6}
+
+/* ===================== 6. 目次 ===================== */
+.tmm-tcl{position:absolute;right:calc(var(--ox) + calc(var(--u)*47.3));top:calc(var(--oy) + calc(var(--u)*157.3))}
+.tmm .tmm-tcl .tl{position:static;font-size:calc(var(--u)*16);letter-spacing:.4em;line-height:1;color:var(--im);writing-mode:vertical-rl}
+.tmm-tcs{position:absolute;left:0;right:0;top:calc(var(--oy) + calc(var(--u)*221.75));height:calc(var(--u)*340);overflow-x:auto;overflow-y:hidden;direction:rtl;
+  touch-action:pan-x;overscroll-behavior-x:contain;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.tmm-tcs::-webkit-scrollbar{display:none}
+.tmm-tcr{display:flex;flex-direction:row;gap:calc(var(--u)*10);width:max-content;height:100%;padding:0 calc(var(--ox) + calc(var(--u)*30.79))}
+.tmm-tcc{position:relative;flex:none;width:calc(var(--u)*175);height:calc(var(--u)*282);direction:ltr;cursor:pointer;--dk:.3}
+.tmm-tcc>img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;background:#ded9cf}
+.tmm-tcc:after{content:"";position:absolute;inset:0;background:#000;opacity:var(--dk);pointer-events:none;transition:opacity .4s ease}
+.tmm-tcc:active:after{opacity:calc(var(--dk) + .12)}
+.tmm-tcc>.tmm-s{position:absolute;inset:0;z-index:2}
+.tmm .tmm-tcc .ti{position:absolute;inset:0;display:block;width:auto;padding:0;border:0;opacity:1!important;transform:none!important;color:#fff}
+.tmm .tmm-tcc .ti:before,.tmm .tmm-tcc .ti:after{display:none}
+.tmm .tmm-tcc .tt{position:absolute;right:calc(var(--u)*15);top:calc(var(--u)*50.9);height:auto;padding:0;font-size:calc(var(--u)*33);letter-spacing:0;line-height:1;color:#fff;white-space:nowrap;transform:none}
+.tmm .tmm-tcc .tx{position:static;display:block;margin:0}
+.tmm .tmm-tcc .ts{position:absolute;right:calc(var(--u)*55.5);top:calc(var(--u)*72.2);height:calc(var(--u)*206);font-size:calc(var(--u)*16);letter-spacing:.06em;line-height:calc(var(--u)*32);color:#fff;white-space:normal;word-break:keep-all;line-break:strict;transform:none}
+.tmm .tmm-tcc .tg{position:absolute;left:calc(var(--u)*-4);right:calc(var(--u)*-4);top:calc(100% + calc(var(--u)*15.6));writing-mode:horizontal-tb;text-align:center;font-size:calc(var(--u)*12);letter-spacing:0;line-height:1.55;color:var(--im);white-space:normal;text-wrap:balance;transform:none}
+.tmm .tmm-tcc .ta{display:none}
+
+/* ===================== 7. テーマの帯（絵巻） =====================
+   右端が1画面目（大きな写真のカード）。左へ、上に写真の列、下に縦書きの文章が続く。
+   帯の長さは文章の量で決まり、写真の列は文章より短くならないよう自動で伸びる */
+.tmm-sr{position:absolute;right:var(--ox);top:var(--oy);height:calc(var(--u)*700);display:flex;flex-direction:row-reverse;align-items:flex-start;padding:0 calc(var(--u)*16);will-change:transform}
+.tmm-mc{position:relative;flex:none;width:calc(var(--u)*343);height:calc(var(--u)*550);margin-top:calc(var(--u)*75);--dk:.3}
+.tmm-im{position:absolute;inset:0;display:block;overflow:hidden;background:#ded9cf}
+.tmm-im img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.tmm-im:after{content:"";position:absolute;inset:0;background:#000;opacity:var(--dk)}
+.tmm-mc>.tmm-s{position:absolute;z-index:2}
+.tmm-kw{right:calc(var(--kr)*var(--u));top:calc(var(--kt)*var(--u))}
+.tmm-le{right:calc(var(--lr,127.9)*var(--u));top:calc(var(--lt)*var(--u))}
+.tmm .tmm-mc .kw{position:static;font-size:calc(var(--u)*45);letter-spacing:0;line-height:1;color:#fff;white-space:nowrap;writing-mode:vertical-rl}
+.tmm .tmm-mc .lead{position:static;height:calc(var(--u)*296);font-size:calc(var(--u)*22);letter-spacing:.1em;line-height:calc(var(--u)*43.63);color:#fff;white-space:normal;word-break:keep-all;line-break:strict;writing-mode:vertical-rl}
+/* 1画面目では左どなりの写真がのぞかないよう、画面の左右の余り（--ox）ぶん離す */
+.tmm-rs{flex:none;margin-right:calc(calc(var(--u)*32) + var(--ox));display:flex;flex-direction:column;align-items:stretch}
+.tmm-row{display:flex;flex-direction:row-reverse;gap:calc(var(--u)*14.5);margin-top:calc(var(--u)*75);height:calc(var(--u)*282)}
+.tmm-ph{position:relative;flex:1 0 calc(var(--w,282)*var(--u));height:100%;overflow:hidden;background:#cbcbcb}
+.tmm-ph.tmm-w{flex:0 0 calc(var(--u)*500)}
+.tmm-ph img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;background:#ded9cf}
+.tmm-tx{display:flex;flex-direction:row-reverse;align-items:flex-start;margin-top:calc(var(--u)*54.8);padding:0 calc(var(--u)*43.6) 0 calc(var(--u)*32)}
+.tmm-tx>.tmm-s{flex:none}
+.tmm-tx>.tmm-s+.tmm-s{margin-right:var(--g2,calc(var(--u)*60))}
+.tmm-tx>.tmm-bd+.tmm-s{margin-right:var(--g1,calc(var(--u)*80))}
+/* 本文 */
+.tmm .tmm-sp .bd{position:relative;right:auto;top:auto;height:calc(14.28em + 1px);font-size:calc(var(--u)*16);line-height:calc(var(--u)*30);letter-spacing:.02em;color:var(--im);text-align:justify;line-break:strict;z-index:auto;writing-mode:vertical-rl}
+/* 情報ブロック（PC版の .ib をそのまま移して組み直す） */
+.tmm .tmm-sp .ib{display:flex;flex-direction:row-reverse;align-items:flex-start;gap:0;height:calc(calc(var(--u)*228.5) + 1px);max-width:none}
+.tmm .tmm-sp .ibc{display:flex;flex-direction:row-reverse;align-items:flex-start;gap:0;height:100%}
+.tmm .tmm-sp .ibk{margin:calc(var(--u)*-13.7) 0 0 calc(var(--u)*11);font-size:calc(var(--u)*15);letter-spacing:.06em;line-height:1;color:var(--il);white-space:nowrap}
+.tmm .tmm-sp .ibn{font-size:calc(var(--u)*20);letter-spacing:.2em;line-height:1;color:var(--i);white-space:nowrap}
+.tmm .tmm-sp .ibn small{font-size:.7em;letter-spacing:.05em}
+.tmm .tmm-sp .ibad{margin-inline-start:.3em;font-size:.65em;letter-spacing:.05em;color:var(--il)}
+.tmm .tmm-sp .ibm{align-self:flex-end;margin:0 calc(var(--u)*36) 0 0;font-size:calc(var(--u)*15);letter-spacing:0;line-height:1;color:var(--il);white-space:nowrap}
+.tmm .tmm-sp .ibd{height:calc(14.28em + 1px);margin-right:calc(var(--u)*23);font-size:calc(var(--u)*16);line-height:calc(var(--u)*30);letter-spacing:.02em;color:var(--im);text-align:justify;line-break:strict}
+.tmm .tmm-sp .ibc:has(.ibm)+.ibd{margin-right:calc(var(--u)*18)}
+.tmm .tmm-sp .ibh>p{padding-inline-start:4em;text-indent:-4em}
+.tmm .tmm-sp .ibl{align-self:flex-end;margin-right:calc(var(--u)*10);padding-right:calc(var(--u)*4);border-right:1px solid rgba(58,50,40,.5);font-size:calc(var(--u)*16);letter-spacing:.05em;line-height:1;color:var(--im);white-space:nowrap;transition:opacity .3s ease}
+.tmm .tmm-sp .ibl.na{font-size:calc(var(--u)*15);color:var(--il)}
+.tmm .tmm-sp .ibc+.ibl{margin-right:calc(var(--u)*16)}
+.tmm .tmm-sp .ibls{align-self:flex-end;display:flex;flex-direction:column;align-items:flex-start;gap:calc(var(--u)*12);height:auto;margin-right:calc(var(--u)*10)}
+.tmm .tmm-sp .ibls .ibl{margin:0}
+.tmm .tmm-sp .ibl:active{opacity:.55}
+.tmm .tmm-sp .tcy{letter-spacing:0}
+/* 行末の句読点はぶら下げる（対応ブラウザ：Safari）。PC版の枠の文章には影響しない */
+.tmm .tmm-sp .bd,.tmm .tmm-sp .ibd,.tmm .tmm-kz .kzg,.tmm .tmm-inb .hb{hanging-punctuation:allow-end}
+/* スマホでは要らないPC版の改行（JS が印を付ける）・スマホだけの改行 */
+.tmm br.tmm-bx{display:none}
+.tmm .tmm-ls{display:none}
+
+/* ===================== 8. 帯ごとの調整（テーマ名・リードの位置はデザインの実測） ===================== */
+.tmm-sp[data-id="stay"]{--kr:61.5;--kt:152.2;--lt:181.6}
+.tmm-sp[data-id="stay"] .tmm-mc{--dk:.21}
+.tmm-sp[data-id="eat"]{--kr:72.9;--kt:144.3;--lt:192.1}
+.tmm-sp[data-id="know"]{--kr:74.7;--kt:151.4;--lt:150.3}
+.tmm-sp[data-id="try"]{--kr:68.3;--kt:146;--lt:178.9;--lr:127.8}
+.tmm-sp[data-id="make"]{--kr:44.3;--kt:134;--lt:157.6;--lr:104.7}
+.tmm-sp[data-id="live"]{--kr:70.9;--kt:86.2;--lt:100.4}
+/* 英字から始まる見出しは、デザインどおり少し上から */
+.tmm [data-s="eat-i1"] .ibn,.tmm [data-s="make-i2"] .ibn{margin-top:calc(var(--u)*-13.7)}
+.tmm [data-s="make-i2"] .ibk{margin-top:0;font-size:calc(var(--u)*16);letter-spacing:.05em;color:var(--il)}
+.tmm [data-s="make-i1"] .ibk{font-size:calc(var(--u)*16)}
+.tmm [data-s="make-i1"] .ibm{font-size:calc(var(--u)*16);letter-spacing:.05em}
+/* 長い施設名は字間をつめる（デザインの実測） */
+.tmm [data-s="eat-i2"] .ibn,.tmm [data-s="try-i1"] .ibn{letter-spacing:.03em}
+.tmm [data-s="try-i2"] .ibn{letter-spacing:.05em}
+.tmm [data-s="know-i1"] .ibn{letter-spacing:.07em}
+.tmm [data-s="know-i2"] .ibn{letter-spacing:.08em;line-height:calc(var(--u)*32);white-space:nowrap}
+.tmm [data-s="live-i1"] .ibn{letter-spacing:.08em}
+.tmm [data-s="live-i2"] .ibn{letter-spacing:.02em}
+/* たべる：cafe 嘉左衛門 → チャレンジキッチン → アクセス */
+.tmm [data-s="eat-i1"] .ibd{margin-right:calc(var(--u)*20)}
+.tmm [data-s="eat-i3"] .ibd{font-size:calc(var(--u)*15);letter-spacing:-.05em;height:calc(15.24em + 1px);margin-right:0}
+.tmm [data-s="eat-i3"] .ibc{display:none}
+/* しる：体験ツアー・ガイドの料金は1字下げ（デザインどおり） */
+.tmm [data-s="know-i1"] .ibh>p{padding-inline-start:1em;text-indent:-1em}
+.tmm [data-s="know-i1"] .ibd{margin-right:calc(var(--u)*26)}
+/* ためす：◎の項目は1列15字（デザインどおり、ほかの文より1字ぶん上から） */
+.tmm [data-s="try-i1"] .ibd,.tmm [data-s="try-i2"] .ibd{margin-top:calc(var(--u)*-14);height:calc(15.3em + 1px)}
+
+/* ===================== 9. 嘉左衛門（別ページの絵巻） ===================== */
+.tmm-kz .tmm-mc{--dk:.4}
+.tmm-kz .tmm-im img{height:50%}
+.tmm-kz .tmm-im img+img{top:50%}
+/* 上の写真（外観）は PC版の stay-kazaemon-xs.webp を使い、デザインの切り抜きに合わせて少し寄せる
+   （1550×1008 の写真の 185,17 から 1189×954 の範囲が、343×275 の枠にちょうど入る） */
+.tmm-kzb{position:absolute;left:0;top:0;width:100%;height:50%;overflow:hidden}
+.tmm-kz .tmm-im .tmm-kzb img{height:100%;transform:scale(1.057);transform-origin:56.3% 30.6%}
+.tmm-kz .tmm-im .tmm-kzb+img{top:50%}
+.tmm-kzl{right:calc(var(--u)*154.4);top:calc(var(--u)*195.1);width:calc(var(--u)*29.3);height:calc(var(--u)*162.8)}
+.tmm .tmm-kzl .kzlg{position:static;width:100%;height:100%;aspect-ratio:auto;margin:0;z-index:auto}
+.tmm .tmm-kzl .kzlg img{display:block;width:100%;height:100%;object-fit:contain;filter:brightness(0) invert(1)}
+.tmm-kzk{right:calc(var(--u)*129.6);top:calc(var(--u)*252.8)}
+.tmm .tmm-kzk .ibk{position:static;font-size:calc(var(--u)*9.86);letter-spacing:.1em;line-height:1;color:#fff;white-space:nowrap;writing-mode:vertical-rl}
+.tmm-kz .tmm-row{height:calc(var(--u)*282);gap:0;align-items:flex-start}
+.tmm-fp{position:relative;flex:none}
+.tmm-fp.f1{width:calc(var(--u)*312);margin:calc(var(--u)*49.3) calc(var(--u)*63.9) 0 0}
+.tmm-fp.f2{width:calc(var(--u)*257);margin:calc(var(--u)*74.6) calc(var(--u)*65.5) 0 0}
+.tmm .tmm-fp img{display:block;width:100%;height:auto}
+.tmm-fp [data-s="kz-l1"],.tmm-fp [data-s="kz-l2"]{position:absolute;left:calc(var(--u)*-2.6);top:calc(var(--u)*175.8)}
+.tmm-fp [data-s="kz-l2"]{left:calc(var(--u)*-23.6);top:calc(var(--u)*158.7)}
+.tmm .tmm-fp .kzfl{position:static;writing-mode:horizontal-tb;font-size:calc(var(--u)*16.7);letter-spacing:.02em;line-height:1.4;color:var(--i)}
+.tmm-map{flex:0 0 calc(var(--u)*475);height:calc(var(--u)*282);margin-right:calc(var(--u)*88.8);background:#cbcbcb}
+.tmm-kz .tmm-tx{padding-left:calc(var(--u)*24.6)}
+.tmm .tmm-kz .kzh{font-size:calc(var(--u)*20);letter-spacing:.1em;line-height:1;color:var(--i);white-space:nowrap;writing-mode:vertical-rl}
+.tmm .tmm-kz .kzg{height:calc(14.28em + 1px);padding-inline-start:1em;text-indent:0;font-size:calc(var(--u)*16);line-height:calc(var(--u)*30);letter-spacing:.02em;color:var(--im);line-break:strict;writing-mode:vertical-rl}
+.tmm .tmm-kz .kzg b{display:block;margin-inline-start:-1em;font-weight:400;color:var(--i)}
+.tmm .tmm-kz .kzg b+br{display:none}
+/* 客室・設備は1列15字（デザインどおり、本文より1字ぶん上から） */
+.tmm .tmm-kz [data-s="kz-g1"] .kzg,.tmm .tmm-kz [data-s="kz-g2"] .kzg{margin-top:calc(var(--u)*-14);height:calc(15.3em + 1px)}
+.tmm .tmm-kz [data-s="kz-g3"] .kzg,.tmm .tmm-kz [data-s="kz-g4"] .kzg{font-size:calc(var(--u)*15);letter-spacing:-.05em;height:calc(15.24em + 1px)}
+/* 住所は「◎住所　西川町間沢…」を1列に（デザインどおり）。アクセスは見出しを1列、続く行はPC版の字下げのまま */
+.tmm .tmm-kz [data-s="kz-g3"] .kzg,.tmm .tmm-kz [data-s="kz-g4"] .kzg{padding-inline-start:0}
+.tmm .tmm-kz [data-s="kz-g3"] .kzg b{display:inline;margin-inline-start:0}
+.tmm .tmm-kz [data-s="kz-g4"] .kzg b{margin-inline-start:0}
+.tmm .tmm-kz .kzln{align-self:flex-end;margin:0;padding-right:calc(var(--u)*4);border-right:1px solid rgba(58,50,40,.5);font-size:calc(var(--u)*16);letter-spacing:.05em;line-height:1;color:var(--im);white-space:nowrap;writing-mode:vertical-rl;transition:opacity .3s ease}
+.tmm .tmm-kz .kzln:active{opacity:.55}
+.tmm-kz .tmm-tx>[data-s="kz-h"]{margin-right:calc(var(--u)*70)}
+.tmm-kz .tmm-tx>[data-s="kz-g1"]{margin-right:calc(var(--u)*30)}
+.tmm-kz .tmm-tx>[data-s="kz-g2"]{margin-right:0}
+.tmm-kz .tmm-tx>[data-s="kz-ln"]{margin-right:calc(var(--u)*11);align-self:flex-end;display:flex;align-items:flex-end;height:calc(calc(var(--u)*228.5) + 1px)}
+.tmm-kz .tmm-tx>[data-s="kz-g3"]{margin-right:calc(var(--u)*59)}
+.tmm-kz .tmm-tx>[data-s="kz-g4"]{margin-right:0}
+.tmm-cl{flex:none;align-self:flex-start;display:flex;flex-direction:column;align-items:center;margin:calc(var(--u)*147.8) calc(var(--u)*33) 0 0;padding:calc(var(--u)*6);color:var(--i)}
+.tmm-cl span{writing-mode:vertical-rl;font-size:calc(var(--u)*16);letter-spacing:.05em;line-height:1}
+.tmm-cl i{position:relative;display:block;width:calc(var(--u)*18);height:calc(var(--u)*12);margin-top:calc(var(--u)*3)}
+.tmm-cl i:before,.tmm-cl i:after{content:"";position:absolute;left:calc(var(--u)*-1.82);top:50%;width:calc(var(--u)*21.63);height:1px;background:currentColor}
+.tmm-cl i:before{transform:rotate(33.69deg)}
+.tmm-cl i:after{transform:rotate(-33.69deg)}
+.tmm-cl:active{opacity:.55}
+
+/* ===================== 10. お問い合わせ ===================== */
+.tmm-cfh{position:absolute;left:calc(var(--u)*29.8);top:calc(var(--u)*85.6);display:flex;align-items:baseline;gap:calc(var(--u)*18.4);white-space:nowrap}
+.tmm .tmm-cfh .fh{position:static;writing-mode:horizontal-tb;font-size:calc(var(--u)*18);letter-spacing:.1em;line-height:1.4;color:var(--i)}
+.tmm-cfr{font-size:calc(var(--u)*9.8);letter-spacing:.04em;color:#c62a1c}
+.tmm-cff{position:absolute;left:calc(var(--u)*30.7);top:calc(var(--u)*134.8);width:calc(var(--u)*312);height:calc(var(--u)*530)}
+.tmm .tmm-cff .fm{position:relative;display:block;height:100%}
+.tmm .tmm-cff .fw{display:block;height:auto}
+.tmm .tmm-cff .frw{position:relative;display:flex;align-items:flex-end;height:calc(var(--u)*50)}
+.tmm .tmm-cff .frw.fta{height:calc(var(--u)*125.4);align-items:stretch}
+.tmm .tmm-cff .fl{flex:0 0 calc(var(--u)*79.5);align-self:flex-end;padding:0 0 calc(var(--u)*4.6);font-size:calc(var(--u)*14);letter-spacing:.02em;line-height:calc(var(--u)*18);color:var(--im);white-space:normal;word-break:keep-all}
+.tmm .tmm-cff .fta .fl{align-self:flex-start;padding-top:calc(var(--u)*20)}
+.tmm .tmm-cff .fl:before{left:-.75em;top:auto;bottom:calc(calc(var(--u)*4.6) + .1em)}
+.tmm .tmm-cff .fl i{display:inline-block;width:1.08em;overflow:hidden;vertical-align:-.12em;white-space:nowrap;margin-left:.3em;font-size:.72em;letter-spacing:0;line-height:1}
+.tmm .tmm-cff .fi{flex:1 1 auto;position:relative;align-self:stretch;min-width:0}
+.tmm .tmm-cff .fi:before{height:1px;background:rgba(110,98,78,.6)}
+.tmm .tmm-cff .fm input[type=text],.tmm .tmm-cff .fm input[type=tel],.tmm .tmm-cff .fm input[type=email],.tmm .tmm-cff .fm select,.tmm .tmm-cff .fm textarea{
+  position:absolute;left:0;bottom:0;width:calc(232.5px*16/13);height:auto;padding:5px 0 7px;border-radius:0;font-size:16px;line-height:1.5;letter-spacing:.02em;
+  transform:scale(calc(var(--k)*13/16));transform-origin:0 100%;user-select:text;-webkit-user-select:text;touch-action:manipulation}
+.tmm .tmm-cff .fm select{padding-right:30px;background-position:right 4px top 50%}
+.tmm .tmm-cff .fm textarea{top:auto;height:calc(118px*16/13);min-height:0;padding-top:24px;resize:none;touch-action:pan-y}
+.tmm .tmm-cff .fhp{position:absolute!important}
+.tmm .tmm-cff .fag{position:absolute;left:calc(var(--u)*39.5);top:calc(var(--u)*413.7);margin:0;gap:calc(var(--u)*12.1);align-self:auto;font-size:calc(var(--u)*13);letter-spacing:.03em;line-height:1.4;color:var(--im);white-space:nowrap}
+.tmm .tmm-cff .fag input,.tmm .tmm-cff .fck{width:calc(var(--u)*19.6);height:calc(var(--u)*19.6)}
+.tmm .tmm-cff .fck{border-color:#666;border-width:.9px;background:rgba(255,255,255,.25)}
+.tmm .tmm-cff .fag .pvl{background:linear-gradient(var(--i),var(--i)) 0 100%/0 1px no-repeat,linear-gradient(#b2b2b2,#b2b2b2) 0 100%/100% 1px no-repeat;padding-bottom:calc(var(--u)*1.5)}
+.tmm .tmm-cff .fsb{position:absolute;left:calc(var(--u)*78.9);top:calc(var(--u)*450.2);width:calc(var(--u)*155.8);height:calc(var(--u)*40);margin:0;padding:0;border-radius:calc(var(--u)*3);font-size:calc(var(--u)*16);letter-spacing:.3em;text-indent:.3em;line-height:calc(var(--u)*40);transform:none}
+.tmm .tmm-cff .fer{position:absolute;left:calc(var(--u)*-14);right:calc(var(--u)*-14);top:calc(var(--u)*494);margin:0;font-size:calc(var(--u)*11);line-height:1.5;text-align:center}
+.tmm .tmm-cff .frc{position:absolute;left:0;right:0;top:calc(var(--u)*514);margin:0;font-size:calc(var(--u)*8.5);line-height:1.5}
+.tmm .tmm-cff .fok{position:absolute;left:calc(var(--u)*-14);right:calc(var(--u)*-14);top:calc(var(--u)*60);height:auto;display:none;gap:calc(var(--u)*18)}
+.tmm-cf.done .fw,.tmm-cf.done .fag,.tmm-cf.done .fer,.tmm-cf.done .fsb,.tmm-cf.done .frc{display:none}
+.tmm-cf.done .tmm-cfr{visibility:hidden}
+.tmm .tmm-cf.done .fok{display:flex;animation:tmmInk 1.2s var(--E) both}
+.tmm .tmm-cff .fok b{font-size:calc(var(--u)*17);letter-spacing:.12em;line-height:1.9}
+.tmm .tmm-cff .fok p{font-size:calc(var(--u)*12.5);line-height:2}
+.tmm-cf.sending .fw,.tmm-cf.sending .fag{pointer-events:none;opacity:.6;transition:opacity .3s ease}
+
+/* ===================== 11. プライバシーポリシーの小窓（スマホで開いている間だけ #tmm の中へ移る） ===================== */
+.tmm .pvm{--pvW:auto}
+.tmm .pvm[open]{display:flex;align-items:center;justify-content:center}
+.tmm .pvp{width:calc(100% - 24px);max-width:520px;max-height:min(86%,calc(100% - 48px));margin:0}
+.tmm .pvhd{padding:26px 54px 12px 22px}
+.tmm .pvk{font-size:10.5px}
+.tmm .pvh{font-size:18px}
+.tmm .pvs{margin:0 22px 22px;padding:14px 4px 22px 0;font-size:13.5px;line-height:1.95;touch-action:pan-y;user-select:text;-webkit-user-select:text}
+.tmm .pvx{top:8px;right:8px;width:42px;height:42px}
+
+/* ===================== 12. 奥付 ===================== */
+.tmm-okt{position:absolute;left:calc(var(--u)*100.2);top:calc(var(--u)*175.6);width:calc(var(--u)*195.9);height:calc(var(--u)*296.2)}
+.tmm .tmm-okt .fbr{position:static;display:block;width:100%;height:100%;pointer-events:none}
+.tmm .tmm-okt .fbr .flt{display:block;width:100%;height:100%;object-fit:contain;translate:none;margin:0}
+.tmm-okf{position:absolute;left:calc(var(--u)*28.7);top:calc(var(--u)*523.8);right:calc(var(--u)*12)}
+.tmm .tmm-okf .fft{position:static;display:flex;flex-direction:column;align-items:flex-start}
+.tmm .tmm-okf .ftl{order:-1;display:block;height:calc(var(--u)*27);width:auto;max-width:none;margin:0 0 calc(var(--u)*3.6) calc(var(--u)*1.8)}
+.tmm .tmm-okf .fop{margin-left:calc(var(--u)*2);font-size:calc(var(--u)*13);letter-spacing:.05em;line-height:calc(var(--u)*22);color:var(--i)}
+.tmm .tmm-okf .fgr{display:flex;align-items:flex-start;gap:calc(var(--u)*5.7);margin-top:calc(var(--u)*22.9)}
+.tmm .tmm-okf .fgrl{width:calc(var(--u)*40);height:calc(var(--u)*38.6);margin-top:calc(var(--u)*9.3)}
+.tmm .tmm-okf .fgrl img{width:100%;height:100%;object-fit:contain}
+.tmm .tmm-okf .fgr p{font-size:calc(var(--u)*12);letter-spacing:0;line-height:calc(var(--u)*16);color:var(--im);word-break:keep-all;line-break:strict}
+.tmm .tmm-okf .nw{white-space:normal}
